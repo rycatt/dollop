@@ -1,20 +1,30 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { format } from 'date-fns';
-import { ArrowLeft, Plus, Search, ShoppingBag } from 'lucide-react-native';
-import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AddItemModal } from '../../components/AddItemModal';
-import { CreateListModal } from '../../components/CreateListModal';
-import { ShoppingListItemComponent } from '../../components/ShoppingListItemComponent';
-import { AVAILABLE_STORES, mockShoppingLists, STORAGE_KEY } from '../../constants/shopping';
-import { ShoppingList, StoreInfo, UnitOfMeasure } from '../../types/shopping';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { format } from "date-fns";
+import { ArrowLeft, Plus, Search, ShoppingBag } from "lucide-react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  FlatList,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { AddProductModal } from "../../components/AddProductModal";
+import { CreateListModal } from "../../components/CreateListModal";
+import { ShoppingListItemComponent } from "../../components/ShoppingListItemComponent";
+import {
+  AVAILABLE_STORES,
+  mockShoppingLists,
+  STORAGE_KEY,
+} from "../../constants/shopping";
+import { ShoppingList, StoreInfo, UnitOfMeasure } from "../../types/shopping";
 
 export default function ShoppingListScreen() {
   const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
   const [selectedList, setSelectedList] = useState<ShoppingList | null>(null);
   const [selectedStore, setSelectedStore] = useState<StoreInfo | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [showCreateListModal, setShowCreateListModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -23,7 +33,7 @@ export default function ShoppingListScreen() {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(lists));
     } catch (error) {
-      console.error('Error saving shopping lists:', error);
+      console.error("Error saving shopping lists:", error);
     }
   }, []);
 
@@ -37,7 +47,9 @@ export default function ShoppingListScreen() {
           createdAt: new Date(list.createdAt),
           items: list.items.map((item: any) => ({
             ...item,
-            store: list.store ? AVAILABLE_STORES.find((s) => s.id === list.storeId) : undefined,
+            store: list.store
+              ? AVAILABLE_STORES.find((s) => s.id === list.storeId)
+              : undefined,
           })),
         }));
         setShoppingLists(lists);
@@ -46,7 +58,7 @@ export default function ShoppingListScreen() {
         await saveShoppingLists(mockShoppingLists);
       }
     } catch (error) {
-      console.error('Error loading shopping lists:', error);
+      console.error("Error loading shopping lists:", error);
       setShoppingLists(mockShoppingLists);
     } finally {
       setLoading(false);
@@ -63,13 +75,13 @@ export default function ShoppingListScreen() {
     const updatedList = {
       ...selectedList,
       items: selectedList.items.map((item) =>
-        item.id === itemId ? { ...item, isChecked: !item.isChecked } : item
+        item.id === itemId ? { ...item, isChecked: !item.isChecked } : item,
       ),
     };
     setSelectedList(updatedList);
 
     const updatedLists = shoppingLists.map((list) =>
-      list.id === selectedList.id ? updatedList : list
+      list.id === selectedList.id ? updatedList : list,
     );
     setShoppingLists(updatedLists);
     saveShoppingLists(updatedLists);
@@ -85,13 +97,17 @@ export default function ShoppingListScreen() {
     setSelectedList(updatedList);
 
     const updatedLists = shoppingLists.map((list) =>
-      list.id === selectedList.id ? updatedList : list
+      list.id === selectedList.id ? updatedList : list,
     );
     setShoppingLists(updatedLists);
     saveShoppingLists(updatedLists);
   };
 
-  const handleAddProduct = (itemData: { name: string; quantity: number; unit: UnitOfMeasure }) => {
+  const handleAddProduct = (itemData: {
+    name: string;
+    quantity: number;
+    unit: UnitOfMeasure;
+  }) => {
     if (!selectedList) return;
 
     const newItem = {
@@ -102,7 +118,7 @@ export default function ShoppingListScreen() {
       price: Math.random() * 20 + 1,
       originalPrice: Math.random() > 0.5 ? Math.random() * 25 + 2 : undefined,
       isChecked: false,
-      category: 'General',
+      category: "General",
       storeId: selectedList.storeId,
     };
 
@@ -113,13 +129,17 @@ export default function ShoppingListScreen() {
     setSelectedList(updatedList);
 
     const updatedLists = shoppingLists.map((list) =>
-      list.id === selectedList.id ? updatedList : list
+      list.id === selectedList.id ? updatedList : list,
     );
     setShoppingLists(updatedLists);
     saveShoppingLists(updatedLists);
   };
 
-  const handleCreateNewList = (listData: { name: string; budget: number; store: StoreInfo }) => {
+  const handleCreateNewList = (listData: {
+    name: string;
+    budget: number;
+    store: StoreInfo;
+  }) => {
     const newList: ShoppingList = {
       id: Date.now().toString(),
       name: listData.name,
@@ -136,11 +156,11 @@ export default function ShoppingListScreen() {
     saveShoppingLists(updatedLists);
   };
 
-  const calculateTotal = (items: ShoppingList['items']) => {
+  const calculateTotal = (items: ShoppingList["items"]) => {
     return items.reduce((total, item) => total + item.price, 0);
   };
 
-  const calculateSavings = (items: ShoppingList['items']) => {
+  const calculateSavings = (items: ShoppingList["items"]) => {
     return items.reduce((savings, item) => {
       if (item.originalPrice) {
         return savings + (item.originalPrice - item.price);
@@ -150,7 +170,7 @@ export default function ShoppingListScreen() {
   };
 
   const filteredLists = shoppingLists.filter((list) =>
-    list.name.toLowerCase().includes(searchQuery.toLowerCase())
+    list.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) {
@@ -166,16 +186,23 @@ export default function ShoppingListScreen() {
   if (selectedList) {
     const total = calculateTotal(selectedList.items);
     const savings = calculateSavings(selectedList.items);
-    const remainingBudget = selectedList.budget ? selectedList.budget - total : 0;
+    const remainingBudget = selectedList.budget
+      ? selectedList.budget - total
+      : 0;
 
     return (
       <>
         <SafeAreaView className="flex-1 bg-gray-50">
           <View className="flex-row items-center justify-between p-4 bg-white">
-            <TouchableOpacity onPress={() => setSelectedList(null)} className="p-2">
+            <TouchableOpacity
+              onPress={() => setSelectedList(null)}
+              className="p-2"
+            >
               <ArrowLeft size={24} color="#374151" />
             </TouchableOpacity>
-            <Text className="text-xl font-semibold text-gray-900">{selectedList.name}</Text>
+            <Text className="text-xl font-semibold text-gray-900">
+              {selectedList.name}
+            </Text>
           </View>
 
           <View className="bg-white mx-4 mt-4 rounded-2xl p-4 shadow-sm">
@@ -187,14 +214,16 @@ export default function ShoppingListScreen() {
 
             <View className="flex-row justify-between items-center">
               <View>
-                <Text className="text-2xl font-bold text-gray-900">${total.toFixed(2)}</Text>
+                <Text className="text-2xl font-bold text-gray-900">
+                  ${total.toFixed(2)}
+                </Text>
                 <Text className="text-sm text-gray-500">Total</Text>
               </View>
               {selectedList.budget ? (
                 <View className="items-end">
                   <Text
                     className={`text-lg font-semibold ${
-                      remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'
+                      remainingBudget >= 0 ? "text-green-600" : "text-red-600"
                     }`}
                   >
                     ${remainingBudget.toFixed(2)}
@@ -246,7 +275,7 @@ export default function ShoppingListScreen() {
           </View>
         </SafeAreaView>
 
-        <AddItemModal
+        <AddProductModal
           visible={showAddItemModal}
           onClose={() => setShowAddItemModal(false)}
           onAddItem={handleAddProduct}
@@ -259,7 +288,9 @@ export default function ShoppingListScreen() {
     <>
       <SafeAreaView className="flex-1 bg-gray-50">
         <View className="p-4">
-          <Text className="text-4xl font-bold text-gray-900">Shopping Lists</Text>
+          <Text className="text-4xl font-bold text-gray-900">
+            Shopping Lists
+          </Text>
         </View>
 
         <View className="bg-white mx-4 rounded-2xl p-4 shadow-sm">
@@ -296,13 +327,17 @@ export default function ShoppingListScreen() {
               >
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1">
-                    <Text className="text-lg font-semibold text-gray-900">{item.name}</Text>
+                    <Text className="text-lg font-semibold text-gray-900">
+                      {item.name}
+                    </Text>
                     <Text className="text-sm text-gray-500">
-                      {format(item.createdAt, 'MMM dd, yyyy')}
+                      {format(item.createdAt, "MMM dd, yyyy")}
                     </Text>
                     {item.store ? (
                       <View className="flex-row items-center mt-1">
-                        <Text className="text-sm text-gray-400">{item.store.name}</Text>
+                        <Text className="text-sm text-gray-400">
+                          {item.store.name}
+                        </Text>
                       </View>
                     ) : null}
                   </View>
@@ -310,7 +345,9 @@ export default function ShoppingListScreen() {
                     <Text className="text-lg font-semibold text-gray-900">
                       ${item.totalSpent.toFixed(2)}
                     </Text>
-                    <Text className="text-sm text-gray-500">{item.items.length} items</Text>
+                    <Text className="text-sm text-gray-500">
+                      {item.items.length} items
+                    </Text>
                     {item.budget ? (
                       <Text className="text-xs text-gray-400">
                         Budget: ${item.budget.toFixed(2)}
@@ -323,7 +360,9 @@ export default function ShoppingListScreen() {
             ListEmptyComponent={() => (
               <View className="p-8 items-center">
                 <ShoppingBag size={48} color="#d1d5db" />
-                <Text className="text-gray-500 mt-4 text-center">No shopping lists found</Text>
+                <Text className="text-gray-500 mt-4 text-center">
+                  No shopping lists found
+                </Text>
                 <Text className="text-gray-400 mt-2 text-center">
                   Create your first list to get started
                 </Text>

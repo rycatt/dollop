@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -7,14 +7,18 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { StoreInfo } from '../types/shopping';
-import { StoreSelector } from './StoreSelector';
+} from "react-native";
+import { StoreInfo } from "../types/shopping";
+import { StoreSelector } from "./StoreSelector";
 
 interface CreateListModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreateList: (listData: { name: string; budget: number; store: StoreInfo }) => void;
+  onCreateList: (listData: {
+    name: string;
+    budget: number;
+    store: StoreInfo;
+  }) => void;
   selectedStore: StoreInfo | null;
   onStoreSelect: (store: StoreInfo) => void;
   stores: StoreInfo[];
@@ -28,8 +32,8 @@ export function CreateListModal({
   onStoreSelect,
   stores,
 }: CreateListModalProps) {
-  const [listName, setListName] = useState('');
-  const [budget, setBudget] = useState('');
+  const [listName, setListName] = useState("");
+  const [budget, setBudget] = useState("");
   const listNameRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -52,31 +56,33 @@ export function CreateListModal({
       store: selectedStore,
     });
 
-    setListName('');
-    setBudget('');
+    setListName("");
+    setBudget("");
     onClose();
   };
 
   const handleCancel = () => {
-    setListName('');
-    setBudget('');
+    setListName("");
+    setBudget("");
     onClose();
   };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View className="flex-1 bg-black/50 items-center justify-center p-4">
+      <View className="flex-1 bg-black/50 justify-center items-center">
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="w-full"
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="w-full items-center justify-center"
         >
-          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4">
             <Text className="text-xl font-bold text-gray-900 mb-6 text-center">
               Create New List
             </Text>
 
             <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">List Name</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-2">
+                List Name
+              </Text>
               <TextInput
                 ref={listNameRef}
                 value={listName}
@@ -90,7 +96,9 @@ export function CreateListModal({
             </View>
 
             <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">Budget (Optional)</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-2">
+                Budget (Optional)
+              </Text>
               <TextInput
                 value={budget}
                 onChangeText={setBudget}
@@ -103,7 +111,9 @@ export function CreateListModal({
             </View>
 
             <View className="mb-6">
-              <Text className="text-sm font-medium text-gray-700 mb-2">Select Store</Text>
+              <Text className="text-sm font-medium text-gray-700 mb-2">
+                Select Store
+              </Text>
               <StoreSelector
                 selectedStore={selectedStore}
                 onStoreSelect={onStoreSelect}
@@ -116,13 +126,17 @@ export function CreateListModal({
                 onPress={handleCancel}
                 className="flex-1 bg-gray-100 py-4 rounded-xl"
               >
-                <Text className="text-gray-700 font-medium text-center">Cancel</Text>
+                <Text className="text-gray-700 font-medium text-center">
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleCreateList}
                 className="flex-1 bg-green-500 py-4 rounded-xl"
               >
-                <Text className="text-white font-medium text-center">Create List</Text>
+                <Text className="text-white font-medium text-center">
+                  Create List
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
