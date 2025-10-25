@@ -1,12 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { format, formatDistanceToNow, isValid, parse } from 'date-fns';
-import { Plus, Search, Trash2, X } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { format, formatDistanceToNow, isValid, parse } from "date-fns";
+import { Plus, Search, Trash2, X } from "lucide-react-native";
+import React, { useEffect, useState } from "react";
 import {
-  Alert,
   EmitterSubscription,
   Keyboard,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Animated as RNAnimated,
@@ -16,31 +14,34 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+} from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-} from 'react-native-reanimated';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+} from "react-native-reanimated";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { AddPantryItemModal } from "../../components/AddPantryItemModal";
 
 interface PantryItem {
   id: string;
   name: string;
   quantity: number;
   emoji: string;
-  storageLocation: 'Fridge' | 'Freezer' | 'Pantry';
+  storageLocation: "Fridge" | "Freezer" | "Pantry";
   expirationDate?: Date;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const STORAGE_KEY = 'pantry_items';
-const STORAGE_LOCATIONS = ['Fridge', 'Freezer', 'Pantry'] as const;
+const STORAGE_KEY = "pantry_items";
 
 interface SwipeableItemProps {
   item: PantryItem;
@@ -55,7 +56,8 @@ function SwipeableItem({ item, onDelete, onPress }: SwipeableItemProps) {
   const pan = Gesture.Pan()
     .onUpdate(({ translationX }) => {
       translateX.value = translationX;
-      revealOpacity.value = translationX < 0 ? Math.min(Math.abs(translationX) / 80, 1) : 0;
+      revealOpacity.value =
+        translationX < 0 ? Math.min(Math.abs(translationX) / 80, 1) : 0;
     })
     .onEnd(({ translationX }) => {
       if (translationX < -100) runOnJS(onDelete)(item.id);
@@ -77,10 +79,12 @@ function SwipeableItem({ item, onDelete, onPress }: SwipeableItemProps) {
     if (!i.expirationDate || !isValid(i.expirationDate)) return null;
     const now = new Date();
     const daysUntilExpiry = Math.ceil(
-      (i.expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (i.expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
     );
-    if (daysUntilExpiry < 0) return { type: 'expired', days: Math.abs(daysUntilExpiry) as number };
-    if (daysUntilExpiry <= 2) return { type: 'expiring', days: daysUntilExpiry as number };
+    if (daysUntilExpiry < 0)
+      return { type: "expired", days: Math.abs(daysUntilExpiry) as number };
+    if (daysUntilExpiry <= 2)
+      return { type: "expiring", days: daysUntilExpiry as number };
     return null;
   };
 
@@ -93,9 +97,9 @@ function SwipeableItem({ item, onDelete, onPress }: SwipeableItemProps) {
         style={[
           {
             ...StyleSheet.absoluteFillObject,
-            backgroundColor: '#ef4444',
-            justifyContent: 'center',
-            alignItems: 'flex-end',
+            backgroundColor: "#ef4444",
+            justifyContent: "center",
+            alignItems: "flex-end",
             paddingRight: 16,
           },
           bgStyle,
@@ -112,37 +116,43 @@ function SwipeableItem({ item, onDelete, onPress }: SwipeableItemProps) {
               revealOpacity.value = withTiming(0, { duration: 200 });
               onPress(item);
             }}
-            className="bg-white p-4 shadow-sm border border-gray-100"
+            className="bg-white p-4 border border-neutral-100 rounded-2xl"
             accessibilityRole="button"
             accessibilityLabel={`${item.name}, ${item.quantity}`}
           >
             <View className="flex-row items-center">
-              <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mr-4">
+              <View className="w-12 h-12 bg-primary-100 rounded-full items-center justify-center mr-4">
                 <Text className="text-2xl">{item.emoji}</Text>
               </View>
 
               <View className="flex-1">
-                <Text className="text-lg font-semibold text-gray-900 mb-1">{item.name}</Text>
-                <Text className="text-sm text-gray-500">{daysAgo}</Text>
+                <Text className="text-lg font-bold text-neutral-900 mb-1">
+                  {item.name}
+                </Text>
+                <Text className="text-sm text-neutral-500">{daysAgo}</Text>
 
                 {expirationStatus ? (
                   <View className="mt-2">
                     <View
                       className={`px-3 py-1 rounded-full self-start ${
-                        expirationStatus.type === 'expired' ? 'bg-red-100' : 'bg-amber-100'
+                        expirationStatus.type === "expired"
+                          ? "bg-red-100"
+                          : "bg-amber-100"
                       }`}
                     >
                       <Text
                         className={`text-xs font-medium ${
-                          expirationStatus.type === 'expired' ? 'text-red-700' : 'text-amber-700'
+                          expirationStatus.type === "expired"
+                            ? "text-red-700"
+                            : "text-amber-700"
                         }`}
                       >
-                        {expirationStatus.type === 'expired'
+                        {expirationStatus.type === "expired"
                           ? `EXPIRED ${expirationStatus.days} DAY${
-                              expirationStatus.days === 1 ? '' : 'S'
+                              expirationStatus.days === 1 ? "" : "S"
                             } AGO`
                           : `EXPIRING IN ${expirationStatus.days} DAY${
-                              expirationStatus.days === 1 ? '' : 'S'
+                              expirationStatus.days === 1 ? "" : "S"
                             }`}
                       </Text>
                     </View>
@@ -151,7 +161,9 @@ function SwipeableItem({ item, onDelete, onPress }: SwipeableItemProps) {
               </View>
 
               <View className="items-end">
-                <Text className="text-lg font-semibold text-gray-900">{item.quantity}</Text>
+                <Text className="text-xl font-bold text-neutral-900">
+                  {item.quantity}
+                </Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -165,7 +177,7 @@ export default function PantryScreen() {
   const insets = useSafeAreaInsets();
 
   const [items, setItems] = useState<PantryItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PantryItem | null>(null);
@@ -173,15 +185,6 @@ export default function PantryScreen() {
   const [fabScale] = useState(new RNAnimated.Value(1));
   const [listOpacity] = useState(new RNAnimated.Value(0));
   const [keyboardLiftY] = useState(new RNAnimated.Value(0));
-
-  const [formData, setFormData] = useState({
-    name: '',
-    quantity: '',
-    emoji: '📦',
-    storageLocation: 'Fridge' as 'Fridge' | 'Freezer' | 'Pantry',
-    expirationDate: '',
-    notes: '',
-  });
 
   useEffect(() => {
     loadItems();
@@ -193,8 +196,10 @@ export default function PantryScreen() {
   }, [listOpacity]);
 
   useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
     let subShow: EmitterSubscription | undefined;
     let subHide: EmitterSubscription | undefined;
@@ -203,7 +208,7 @@ export default function PantryScreen() {
       const h = e.endCoordinates?.height ?? 0;
       RNAnimated.timing(keyboardLiftY, {
         toValue: -h,
-        duration: Platform.OS === 'ios' ? (e.duration ?? 250) : 250,
+        duration: Platform.OS === "ios" ? (e.duration ?? 250) : 250,
         useNativeDriver: true,
       }).start();
     });
@@ -211,7 +216,7 @@ export default function PantryScreen() {
     subHide = Keyboard.addListener(hideEvent, (e) => {
       RNAnimated.timing(keyboardLiftY, {
         toValue: 0,
-        duration: Platform.OS === 'ios' ? (e?.duration ?? 250) : 250,
+        duration: Platform.OS === "ios" ? (e?.duration ?? 250) : 250,
         useNativeDriver: true,
       }).start();
     });
@@ -238,7 +243,7 @@ export default function PantryScreen() {
         setItems(parsedItems);
       }
     } catch (error) {
-      console.error('Error loading items:', error);
+      console.error("Error loading items:", error);
     }
   };
 
@@ -247,45 +252,36 @@ export default function PantryScreen() {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newItems));
       setItems(newItems);
     } catch (error) {
-      console.error('Error saving items:', error);
+      console.error("Error saving items:", error);
     }
   };
 
-  const addItem = async () => {
-    if (!formData.name.trim() || !formData.quantity) {
-      Alert.alert('Error', 'Please fill in all required fields');
-      return;
-    }
-
-    const parsed = formData.expirationDate
-      ? parse(formData.expirationDate.trim(), 'MM/dd/yyyy', new Date())
+  const addItem = async (itemData: {
+    name: string;
+    quantity: number;
+    emoji: string;
+    storageLocation: "Fridge" | "Freezer" | "Pantry";
+    expirationDate?: string;
+    notes?: string;
+  }) => {
+    const parsed = itemData.expirationDate
+      ? parse(itemData.expirationDate.trim(), "MM/dd/yyyy", new Date())
       : undefined;
 
     const newItem: PantryItem = {
       id: Math.random().toString(36).substring(2, 9),
-      name: formData.name.trim(),
-      quantity: parseFloat(formData.quantity),
-      emoji: formData.emoji,
-      storageLocation: formData.storageLocation,
+      name: itemData.name,
+      quantity: itemData.quantity,
+      emoji: itemData.emoji,
+      storageLocation: itemData.storageLocation,
       expirationDate: parsed && isValid(parsed) ? parsed : undefined,
-      notes: formData.notes.trim(),
+      notes: itemData.notes,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
     const updatedItems = [newItem, ...items];
     await saveItems(updatedItems);
-
-    setFormData({
-      name: '',
-      quantity: '',
-      emoji: '📦',
-      storageLocation: 'Fridge',
-      expirationDate: '',
-      notes: '',
-    });
-    setIsAddModalVisible(false);
-    showSuccessToast('Item added successfully!');
   };
 
   const deleteItem = async (itemId: string) => {
@@ -295,18 +291,16 @@ export default function PantryScreen() {
     setSelectedItem(null);
   };
 
-  const showSuccessToast = (message: string) => {
-    Alert.alert('Success', message, [{ text: 'OK' }]);
-  };
-
   const getExpirationStatus = (i: PantryItem) => {
     if (!i.expirationDate || !isValid(i.expirationDate)) return null;
     const now = new Date();
     const daysUntilExpiry = Math.ceil(
-      (i.expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (i.expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
     );
-    if (daysUntilExpiry < 0) return { type: 'expired', days: Math.abs(daysUntilExpiry) as number };
-    if (daysUntilExpiry <= 2) return { type: 'expiring', days: daysUntilExpiry as number };
+    if (daysUntilExpiry < 0)
+      return { type: "expired", days: Math.abs(daysUntilExpiry) as number };
+    if (daysUntilExpiry <= 2)
+      return { type: "expiring", days: daysUntilExpiry as number };
     return null;
   };
 
@@ -330,18 +324,18 @@ export default function PantryScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white">
-        <Text className="text-2xl font-bold text-gray-900">Pantry</Text>
+    <SafeAreaView className="flex-1 bg-neutral-50" edges={["top", "bottom"]}>
+      <View className="flex-row items-center justify-between px-6 py-3 bg-neutral-50">
+        <Text className="text-4xl font-bold text-neutral-900">Pantry</Text>
       </View>
 
       <View className="px-4 py-3">
-        <View className="flex-row items-center bg-gray-50 rounded-full px-4 py-3">
-          <Search size={20} color="#6B7280" />
+        <View className="flex-row items-center bg-white rounded-2xl px-4 py-3 border border-neutral-100">
+          <Search size={20} color="#A3A3A3" />
           <TextInput
-            className="flex-1 ml-3 leading-none text-gray-900"
+            className="flex-1 ml-3 leading-none text-neutral-900"
             placeholder="Search your pantry"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#A3A3A3"
             value={searchQuery}
             onChangeText={setSearchQuery}
             accessibilityRole="search"
@@ -355,7 +349,9 @@ export default function PantryScreen() {
           className="flex-1 px-4 py-2"
           showsVerticalScrollIndicator={false}
           accessibilityRole="list"
-          contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
+          contentInsetAdjustmentBehavior={
+            Platform.OS === "ios" ? "automatic" : undefined
+          }
           contentContainerStyle={{
             paddingBottom: (insets.bottom || 0) + 96,
           }}
@@ -377,7 +373,7 @@ export default function PantryScreen() {
 
       <RNAnimated.View
         style={{
-          position: 'absolute',
+          position: "absolute",
           right: 20,
           bottom: 20,
           transform: [{ scale: fabScale }, { translateY: keyboardLiftY }],
@@ -388,7 +384,7 @@ export default function PantryScreen() {
             animateFab();
             setIsAddModalVisible(true);
           }}
-          className="w-14 h-14 bg-green-500 rounded-full items-center justify-center shadow-lg"
+          className="w-16 h-16 bg-primary-500 rounded-full items-center justify-center shadow-lg"
           accessibilityRole="button"
           accessibilityLabel="Add new item"
         >
@@ -396,220 +392,72 @@ export default function PantryScreen() {
         </TouchableOpacity>
       </RNAnimated.View>
 
-      <Modal visible={isAddModalVisible} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
-            className="flex-1"
-          >
-            <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-              <Text className="text-xl font-semibold text-gray-900">Add Item</Text>
-              <TouchableOpacity
-                onPress={() => setIsAddModalVisible(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-              >
-                <X size={24} color="#374151" />
-              </TouchableOpacity>
-            </View>
+      <AddPantryItemModal
+        visible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)}
+        onAddItem={addItem}
+      />
 
-            <ScrollView
-              className="flex-1 px-4 py-6"
-              keyboardShouldPersistTaps="handled"
-              contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
-              contentContainerStyle={{
-                paddingBottom: (insets.bottom || 0) + 160,
-              }}
-            >
-              <View className="mb-6">
-                <Text className="text-base font-medium text-gray-900 mb-2">
-                  Name <Text className="text-red-500">*</Text>
-                </Text>
-                <TextInput
-                  className="border border-gray-300 rounded-xl px-4 py-3 leading-none text-gray-900 bg-white"
-                  placeholder="Enter item name"
-                  placeholderTextColor="#9CA3AF"
-                  value={formData.name}
-                  onChangeText={(text) => setFormData({ ...formData, name: text })}
-                  accessibilityRole="text"
-                  accessibilityLabel="Item name"
-                  autoCapitalize="words"
-                  autoCorrect={false}
-                  returnKeyType="next"
-                  textAlignVertical="center"
-                />
-              </View>
-
-              <View className="mb-6">
-                <Text className="text-base font-medium text-gray-900 mb-2">Icon</Text>
-                <View className="flex-row items-center">
-                  <View className="flex-1 mr-2">
-                    <TextInput
-                      className="border border-gray-300 rounded-xl px-4 py-3 text-center"
-                      placeholder="Enter emoji..."
-                      value={formData.emoji}
-                      onChangeText={(text) => setFormData({ ...formData, emoji: text })}
-                      maxLength={2}
-                      accessibilityRole="text"
-                      accessibilityLabel="Enter custom emoji"
-                    />
-                  </View>
-                  <View className="w-12 h-12 bg-gray-100 rounded-xl items-center justify-center">
-                    <Text className="text-2xl">{formData.emoji || '📦'}</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View className="mb-6">
-                <Text className="text-base font-medium text-gray-900 mb-2">
-                  Quantity <Text className="text-red-500">*</Text>
-                </Text>
-                <TextInput
-                  className="border border-gray-300 rounded-xl px-4 py-3 leading-none text-gray-900 bg-white"
-                  placeholder="0"
-                  placeholderTextColor="#9CA3AF"
-                  value={formData.quantity}
-                  onChangeText={(text) => setFormData({ ...formData, quantity: text })}
-                  keyboardType="numeric"
-                  accessibilityRole="text"
-                  accessibilityLabel="Item quantity"
-                  textAlignVertical="center"
-                />
-              </View>
-
-              <View className="mb-6">
-                <Text className="text-base font-medium text-gray-900 mb-2">Storage Location</Text>
-                <View className="flex-row">
-                  {STORAGE_LOCATIONS.map((location) => (
-                    <TouchableOpacity
-                      key={location}
-                      onPress={() => setFormData({ ...formData, storageLocation: location })}
-                      className={`flex-1 px-4 py-3 rounded-xl mr-2 ${
-                        formData.storageLocation === location ? 'bg-green-500' : 'bg-gray-200'
-                      }`}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Select storage location ${location}`}
-                    >
-                      <Text
-                        className={`text-center font-medium ${
-                          formData.storageLocation === location ? 'text-white' : 'text-gray-700'
-                        }`}
-                      >
-                        {location}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View className="mb-6">
-                <Text className="text-base font-medium text-gray-900 mb-2">
-                  Expiration Date <Text className="text-gray-400">(Optional)</Text>
-                </Text>
-                <TextInput
-                  className="border border-gray-300 rounded-xl px-4 py-3"
-                  placeholder="MM/DD/YYYY"
-                  value={formData.expirationDate}
-                  onChangeText={(text) => setFormData({ ...formData, expirationDate: text })}
-                  accessibilityRole="text"
-                  accessibilityLabel="Expiration date"
-                />
-              </View>
-
-              <View className="mb-6">
-                <Text className="text-base font-medium text-gray-900 mb-2">
-                  Notes <Text className="text-gray-400">(Optional)</Text>
-                </Text>
-                <TextInput
-                  className="border border-gray-300 rounded-xl px-4 py-3"
-                  placeholder="Add notes..."
-                  value={formData.notes}
-                  onChangeText={(text) => setFormData({ ...formData, notes: text })}
-                  multiline
-                  numberOfLines={3}
-                  textAlignVertical="top"
-                  accessibilityRole="text"
-                  accessibilityLabel="Item notes"
-                />
-              </View>
-            </ScrollView>
-
-            <View
-              className="px-4 border-t border-gray-200 bg-white"
-              style={{
-                paddingTop: 16,
-                paddingBottom: (insets.bottom || 0) + 24,
-              }}
-            >
-              <TouchableOpacity
-                onPress={addItem}
-                className="bg-green-500 rounded-xl py-4 items-center"
-                accessibilityRole="button"
-                accessibilityLabel="Save item"
-              >
-                <Text className="text-white font-semibold text-lg">Save Item</Text>
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </Modal>
-
-      <Modal visible={isDetailsModalVisible} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
+      <Modal visible={isDetailsModalVisible} transparent animationType="fade">
+        <View className="flex-1 bg-black/50 justify-center items-center p-4">
           {selectedItem ? (
-            <>
-              <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
-                <Text className="text-xl font-semibold text-gray-900">Item Details</Text>
+            <View className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-lg">
+              <View className="flex-row items-center justify-between mb-6">
+                <Text className="text-xl font-bold text-neutral-900">
+                  Item Details
+                </Text>
                 <TouchableOpacity
                   onPress={() => {
                     setIsDetailsModalVisible(false);
                     setSelectedItem(null);
                   }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Close"
+                  className="p-1"
                 >
-                  <X size={24} color="#374151" />
+                  <X size={20} color="#737373" />
                 </TouchableOpacity>
               </View>
 
               <ScrollView
-                className="flex-1 px-4 py-6"
                 keyboardShouldPersistTaps="handled"
-                contentInsetAdjustmentBehavior={Platform.OS === 'ios' ? 'automatic' : undefined}
-                contentContainerStyle={{
-                  paddingBottom: (insets.bottom || 0) + 120,
-                }}
+                showsVerticalScrollIndicator={false}
+                style={{ maxHeight: 400 }}
               >
                 <View className="items-center mb-6">
-                  <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+                  <View className="w-20 h-20 bg-primary-100 rounded-full items-center justify-center mb-4">
                     <Text className="text-4xl">{selectedItem.emoji}</Text>
                   </View>
-                  <Text className="text-2xl font-bold text-gray-900 text-center">
+                  <Text className="text-2xl font-bold text-neutral-900 text-center">
                     {selectedItem.name}
                   </Text>
                 </View>
 
                 <View className="space-y-4">
-                  <View className="bg-gray-50 rounded-xl p-4">
-                    <Text className="text-sm text-gray-500 mb-1">Quantity</Text>
-                    <Text className="text-lg font-semibold text-gray-900">
+                  <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
+                    <Text className="text-sm text-neutral-500 mb-1">
+                      Quantity
+                    </Text>
+                    <Text className="text-lg font-bold text-neutral-900">
                       {selectedItem.quantity}
                     </Text>
                   </View>
 
-                  <View className="bg-gray-50 rounded-xl p-4">
-                    <Text className="text-sm text-gray-500 mb-1">Storage Location</Text>
-                    <Text className="text-lg font-semibold text-gray-900">
+                  <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
+                    <Text className="text-sm text-neutral-500 mb-1">
+                      Storage Location
+                    </Text>
+                    <Text className="text-lg font-bold text-neutral-900">
                       {selectedItem.storageLocation}
                     </Text>
                   </View>
 
-                  {selectedItem.expirationDate && isValid(selectedItem.expirationDate) ? (
-                    <View className="bg-gray-50 rounded-xl p-4">
-                      <Text className="text-sm text-gray-500 mb-1">Expiration Date</Text>
-                      <Text className="text-lg font-semibold text-gray-900">
-                        {format(selectedItem.expirationDate, 'MM/dd/yyyy')}
+                  {selectedItem.expirationDate &&
+                  isValid(selectedItem.expirationDate) ? (
+                    <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
+                      <Text className="text-sm text-neutral-500 mb-1">
+                        Expiration Date
+                      </Text>
+                      <Text className="text-lg font-bold text-neutral-900">
+                        {format(selectedItem.expirationDate, "MM/dd/yyyy")}
                       </Text>
                       {(() => {
                         const st = getExpirationStatus(selectedItem);
@@ -618,17 +466,21 @@ export default function PantryScreen() {
                           <View className="mt-2">
                             <View
                               className={`px-3 py-1 rounded-full self-start ${
-                                st.type === 'expired' ? 'bg-red-100' : 'bg-amber-100'
+                                st.type === "expired"
+                                  ? "bg-red-100"
+                                  : "bg-amber-100"
                               }`}
                             >
                               <Text
                                 className={`text-xs font-medium ${
-                                  st.type === 'expired' ? 'text-red-700' : 'text-amber-700'
+                                  st.type === "expired"
+                                    ? "text-red-700"
+                                    : "text-amber-700"
                                 }`}
                               >
-                                {st.type === 'expired'
-                                  ? `EXPIRED ${st.days} DAY${st.days === 1 ? '' : 'S'} AGO`
-                                  : `EXPIRING IN ${st.days} DAY${st.days === 1 ? '' : 'S'}`}
+                                {st.type === "expired"
+                                  ? `EXPIRED ${st.days} DAY${st.days === 1 ? "" : "S"} AGO`
+                                  : `EXPIRING IN ${st.days} DAY${st.days === 1 ? "" : "S"}`}
                               </Text>
                             </View>
                           </View>
@@ -638,17 +490,21 @@ export default function PantryScreen() {
                   ) : null}
 
                   {selectedItem.notes ? (
-                    <View className="bg-gray-50 rounded-xl p-4">
-                      <Text className="text-sm text-gray-500 mb-1">Notes</Text>
-                      <Text className="text-lg font-semibold text-gray-900">
+                    <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
+                      <Text className="text-sm text-neutral-500 mb-1">
+                        Notes
+                      </Text>
+                      <Text className="text-lg font-bold text-neutral-900">
                         {selectedItem.notes}
                       </Text>
                     </View>
                   ) : null}
 
-                  <View className="bg-gray-50 rounded-xl p-4">
-                    <Text className="text-sm text-gray-500 mb-1">Last Updated</Text>
-                    <Text className="text-lg font-semibold text-gray-900">
+                  <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
+                    <Text className="text-sm text-neutral-500 mb-1">
+                      Last Updated
+                    </Text>
+                    <Text className="text-lg font-bold text-neutral-900">
                       {formatDistanceToNow(selectedItem.updatedAt, {
                         addSuffix: true,
                       })}
@@ -657,26 +513,30 @@ export default function PantryScreen() {
                 </View>
               </ScrollView>
 
-              <View
-                className="px-4 border-t border-gray-200 bg-white"
-                style={{
-                  paddingTop: 16,
-                  paddingBottom: (insets.bottom || 0) + 24,
-                }}
-              >
+              <View className="flex-row gap-3 mt-6">
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsDetailsModalVisible(false);
+                    setSelectedItem(null);
+                  }}
+                  className="flex-1 py-4 rounded-2xl border border-neutral-200"
+                >
+                  <Text className="text-neutral-700 font-semibold text-center">
+                    Close
+                  </Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => deleteItem(selectedItem.id)}
-                  className="bg-red-500 rounded-xl py-4 items-center flex-row justify-center"
-                  accessibilityRole="button"
-                  accessibilityLabel="Delete item"
+                  className="flex-1 bg-red-500 py-4 rounded-2xl"
                 >
-                  <Trash2 size={20} color="white" />
-                  <Text className="text-white font-semibold text-lg ml-2">Delete Item</Text>
+                  <Text className="text-white font-semibold text-center">
+                    Delete Item
+                  </Text>
                 </TouchableOpacity>
               </View>
-            </>
+            </View>
           ) : null}
-        </SafeAreaView>
+        </View>
       </Modal>
     </SafeAreaView>
   );

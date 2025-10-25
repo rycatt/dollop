@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -36,14 +37,6 @@ export function CreateListModal({
   const [budget, setBudget] = useState("");
   const listNameRef = useRef<TextInput>(null);
 
-  useEffect(() => {
-    if (visible) {
-      setTimeout(() => {
-        listNameRef.current?.focus();
-      }, 100);
-    }
-  }, [visible]);
-
   const handleCreateList = () => {
     if (!listName.trim() || !selectedStore) return;
 
@@ -69,79 +62,87 @@ export function CreateListModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View className="flex-1 bg-black/50 justify-center items-center">
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="w-full items-center justify-center"
-        >
-          <View className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4">
-            <Text className="text-xl font-bold text-gray-900 mb-6 text-center">
-              Create New List
-            </Text>
-
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">
-                List Name
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center p-4">
+          <View
+            className="bg-white rounded-3xl w-full max-w-sm"
+            style={{ maxHeight: "80%" }}
+          >
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ padding: 24 }}
+            >
+              <Text className="text-xl font-bold text-neutral-900 mb-6 text-center">
+                Create New List
               </Text>
-              <TextInput
-                ref={listNameRef}
-                value={listName}
-                onChangeText={setListName}
-                placeholder="Enter list name"
-                placeholderTextColor="#6b7280"
-                className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-base text-gray-900"
-                returnKeyType="next"
-                autoFocus
-              />
-            </View>
 
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">
-                Budget (Optional)
-              </Text>
-              <TextInput
-                value={budget}
-                onChangeText={setBudget}
-                placeholder="0.00"
-                placeholderTextColor="#6b7280"
-                className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-base text-gray-900"
-                keyboardType="numeric"
-                returnKeyType="done"
-              />
-            </View>
-
-            <View className="mb-6">
-              <Text className="text-sm font-medium text-gray-700 mb-2">
-                Select Store
-              </Text>
-              <StoreSelector
-                selectedStore={selectedStore}
-                onStoreSelect={onStoreSelect}
-                stores={stores}
-              />
-            </View>
-
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                onPress={handleCancel}
-                className="flex-1 bg-gray-100 py-4 rounded-xl"
-              >
-                <Text className="text-gray-700 font-medium text-center">
-                  Cancel
+              <View className="mb-4">
+                <Text className="text-sm font-semibold text-neutral-700 mb-2">
+                  Select Store
                 </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleCreateList}
-                className="flex-1 bg-green-500 py-4 rounded-xl"
-              >
-                <Text className="text-white font-medium text-center">
-                  Create List
+                <StoreSelector
+                  selectedStore={selectedStore}
+                  onStoreSelect={onStoreSelect}
+                  stores={stores}
+                />
+              </View>
+
+              <View className="mb-4">
+                <Text className="text-sm font-semibold text-neutral-700 mb-2">
+                  List Name
                 </Text>
-              </TouchableOpacity>
-            </View>
+                <TextInput
+                  ref={listNameRef}
+                  value={listName}
+                  onChangeText={setListName}
+                  placeholder="Enter list name"
+                  placeholderTextColor="#A3A3A3"
+                  className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 text-base text-neutral-900"
+                  returnKeyType="next"
+                />
+              </View>
+
+              <View className="mb-6">
+                <Text className="text-sm font-semibold text-neutral-700 mb-2">
+                  Budget (Optional)
+                </Text>
+                <TextInput
+                  value={budget}
+                  onChangeText={setBudget}
+                  placeholder="0.00"
+                  placeholderTextColor="#A3A3A3"
+                  className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 text-base text-neutral-900"
+                  keyboardType="numeric"
+                  returnKeyType="done"
+                />
+              </View>
+
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  onPress={handleCancel}
+                  className="flex-1 border border-neutral-200 py-4 rounded-2xl"
+                >
+                  <Text className="text-neutral-700 font-semibold text-center">
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleCreateList}
+                  className="flex-1 bg-primary-500 py-4 rounded-2xl"
+                >
+                  <Text className="text-white font-semibold text-center">
+                    Create List
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
-        </KeyboardAvoidingView>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
