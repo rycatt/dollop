@@ -1,9 +1,31 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  calculateCategoryBreakdown,
+  calculateMonthlySpending,
+} from "../../utils/dataSync";
 
 export default function AnalyticsScreen() {
+  const [monthlySpending, setMonthlySpending] = useState<number>(0);
+  const [categoryBreakdown, setCategoryBreakdown] = useState<
+    { category: string; amount: number; percentage: number }[]
+  >([]);
+
+  const loadData = useCallback(async () => {
+    const spending = await calculateMonthlySpending();
+    const breakdown = await calculateCategoryBreakdown();
+    setMonthlySpending(spending);
+    setCategoryBreakdown(breakdown);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData]),
+  );
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
       <ScrollView
@@ -30,70 +52,64 @@ export default function AnalyticsScreen() {
               </Text>
             </View>
             <Text className="text-4xl font-bold text-primary-900 mt-2">
-              $245.50
+              ${monthlySpending.toFixed(2)}
             </Text>
             <Text className="text-primary-600 mt-1">Total spending</Text>
           </View>
 
-          <View className="bg-white rounded-3xl p-6 border border-neutral-100">
-            <Text className="text-lg font-bold text-neutral-900 mb-4">
-              Category Breakdown
-            </Text>
+          {categoryBreakdown.length > 0 ? (
+            <View className="bg-white rounded-3xl p-6 border border-neutral-100">
+              <Text className="text-lg font-bold text-neutral-900 mb-4">
+                Category Breakdown
+              </Text>
 
-            <View className="mb-4">
-              <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-neutral-700 font-medium">Produce</Text>
-                <Text className="text-neutral-900 font-bold">$89.20</Text>
-              </View>
-              <View className="h-2 bg-neutral-100 rounded-full overflow-hidden">
-                <View
-                  className="h-full bg-primary-500 rounded-full"
-                  style={{ width: "45%" }}
-                />
-              </View>
-            </View>
+              {categoryBreakdown.map((cat, index) => {
+                const colors = [
+                  "bg-primary-500",
+                  "bg-secondary-500",
+                  "bg-accent-500",
+                  "bg-neutral-400",
+                  "bg-primary-400",
+                  "bg-secondary-400",
+                ];
+                const colorClass = colors[index % colors.length];
 
-            <View className="mb-4">
-              <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-neutral-700 font-medium">Dairy</Text>
-                <Text className="text-neutral-900 font-bold">$62.30</Text>
-              </View>
-              <View className="h-2 bg-neutral-100 rounded-full overflow-hidden">
-                <View
-                  className="h-full bg-secondary-500 rounded-full"
-                  style={{ width: "30%" }}
-                />
-              </View>
+                return (
+                  <View
+                    key={cat.category}
+                    className={
+                      index < categoryBreakdown.length - 1 ? "mb-4" : ""
+                    }
+                  >
+                    <View className="flex-row justify-between items-center mb-2">
+                      <Text className="text-neutral-700 font-medium">
+                        {cat.category}
+                      </Text>
+                      <Text className="text-neutral-900 font-bold">
+                        ${cat.amount.toFixed(2)}
+                      </Text>
+                    </View>
+                    <View className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+                      <View
+                        className={`h-full ${colorClass} rounded-full`}
+                        style={{ width: `${Math.round(cat.percentage)}%` }}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
             </View>
-
-            <View className="mb-4">
-              <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-neutral-700 font-medium">
-                  Meat & Seafood
-                </Text>
-                <Text className="text-neutral-900 font-bold">$54.80</Text>
-              </View>
-              <View className="h-2 bg-neutral-100 rounded-full overflow-hidden">
-                <View
-                  className="h-full bg-accent-500 rounded-full"
-                  style={{ width: "25%" }}
-                />
-              </View>
+          ) : (
+            <View className="bg-white rounded-3xl p-6 border border-neutral-100">
+              <Text className="text-lg font-bold text-neutral-900 mb-2">
+                Category Breakdown
+              </Text>
+              <Text className="text-neutral-500 text-center py-8">
+                No spending data available yet.{"\n"}
+                Add items to your shopping lists to see breakdown.
+              </Text>
             </View>
-
-            <View>
-              <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-neutral-700 font-medium">Other</Text>
-                <Text className="text-neutral-900 font-bold">$39.20</Text>
-              </View>
-              <View className="h-2 bg-neutral-100 rounded-full overflow-hidden">
-                <View
-                  className="h-full bg-neutral-400 rounded-full"
-                  style={{ width: "18%" }}
-                />
-              </View>
-            </View>
-          </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

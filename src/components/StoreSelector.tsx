@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react-native";
 import React, { useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { StoreInfo } from "../types/shopping";
+import { StoreInfo } from "../constants/shopping";
 
 interface StoreSelectorProps {
   selectedStore: StoreInfo | null;

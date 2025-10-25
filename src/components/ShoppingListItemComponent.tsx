@@ -1,7 +1,7 @@
 import { Check, Trash2 } from "lucide-react-native";
 import React from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
-import { ShoppingListItem } from "../types/shopping";
+import { ShoppingListItem } from "../constants/shopping";
 
 interface ShoppingListItemComponentProps {
   item: ShoppingListItem;

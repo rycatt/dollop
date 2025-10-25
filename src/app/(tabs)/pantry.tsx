@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { format, formatDistanceToNow, isValid, parse } from "date-fns";
 import { Plus, Search, Trash2, X } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   EmitterSubscription,
   Keyboard,
@@ -187,13 +188,18 @@ export default function PantryScreen() {
   const [keyboardLiftY] = useState(new RNAnimated.Value(0));
 
   useEffect(() => {
-    loadItems();
     RNAnimated.timing(listOpacity, {
       toValue: 1,
       duration: 300,
       useNativeDriver: true,
     }).start();
   }, [listOpacity]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadItems();
+    }, []),
+  );
 
   useEffect(() => {
     const showEvent =

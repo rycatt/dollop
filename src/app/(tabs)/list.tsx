@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -23,9 +24,11 @@ import { ShoppingListItemComponent } from "../../components/ShoppingListItemComp
 import {
   AVAILABLE_STORES,
   mockShoppingLists,
+  ShoppingList,
   STORAGE_KEY,
+  StoreInfo,
+  UnitOfMeasure,
 } from "../../constants/shopping";
-import { ShoppingList, StoreInfo, UnitOfMeasure } from "../../types/shopping";
 
 export default function ShoppingListScreen() {
   const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
@@ -75,6 +78,12 @@ export default function ShoppingListScreen() {
   useEffect(() => {
     loadShoppingLists();
   }, [loadShoppingLists]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadShoppingLists();
+    }, [loadShoppingLists]),
+  );
 
   const handleToggleItem = (itemId: string) => {
     if (!selectedList) return;

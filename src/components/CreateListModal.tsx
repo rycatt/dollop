@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { StoreInfo } from "../types/shopping";
+import { StoreInfo } from "../constants/shopping";
 import { StoreSelector } from "./StoreSelector";
 
 interface CreateListModalProps {

@@ -1,25 +1,36 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionCard } from "../../components/ActionCard";
-import { ExpiryCard, type StatusType } from "../../components/ExpiryCard";
+import { ExpiryCard } from "../../components/ExpiryCard";
+import {
+  calculateMonthlySpending,
+  ExpiringItem,
+  getExpiringItems,
+} from "../../utils/dataSync";
 
 const MOCK_USER = {
   name: "User",
 };
 
-const MOCK_EXPIRING_ITEMS: {
-  name: string;
-  daysLeft: number;
-  status: StatusType;
-}[] = [
-  { name: "Milk", daysLeft: 2, status: "warning" },
-  { name: "Eggs", daysLeft: 1, status: "danger" },
-  { name: "Bread", daysLeft: 4, status: "success" },
-  { name: "Cheese", daysLeft: 3, status: "warning" },
-];
-
 export default function HomeScreen() {
+  const [monthlySpending, setMonthlySpending] = useState<number>(0);
+  const [expiringItems, setExpiringItems] = useState<ExpiringItem[]>([]);
+
+  const loadData = useCallback(async () => {
+    const spending = await calculateMonthlySpending();
+    const expiring = await getExpiringItems();
+    setMonthlySpending(spending);
+    setExpiringItems(expiring);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData]),
+  );
   return (
     <SafeAreaView className="flex-1 bg-neutral-50">
       <ScrollView
@@ -69,30 +80,32 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View className="mt-8 px-6">
-          <View className="flex-row items-center mb-4">
-            <MaterialCommunityIcons
-              name="clock-alert-outline"
-              size={24}
-              color="#059669"
-            />
-            <Text className="text-lg font-bold text-neutral-900 ml-2">
-              Expiring Soon
-            </Text>
+        {expiringItems.length > 0 && (
+          <View className="mt-8 px-6">
+            <View className="flex-row items-center mb-4">
+              <MaterialCommunityIcons
+                name="clock-alert-outline"
+                size={24}
+                color="#059669"
+              />
+              <Text className="text-lg font-bold text-neutral-900 ml-2">
+                Expiring Soon
+              </Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {expiringItems.map((item, index) => (
+                <ExpiryCard key={index} {...item} />
+              ))}
+            </ScrollView>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {MOCK_EXPIRING_ITEMS.map((item, index) => (
-              <ExpiryCard key={index} {...item} />
-            ))}
-          </ScrollView>
-        </View>
+        )}
 
         <View className="mt-8 mx-6 p-6 bg-primary-50 rounded-3xl border border-primary-100">
           <Text className="text-primary-700 font-semibold text-sm">
             This Month
           </Text>
           <Text className="text-4xl font-bold text-primary-900 mt-2">
-            $245.50
+            ${monthlySpending.toFixed(2)}
           </Text>
           <Text className="text-primary-600 mt-1">Grocery spending</Text>
         </View>

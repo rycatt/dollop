@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { UnitOfMeasure } from "../types/shopping";
+import { UnitOfMeasure } from "../constants/shopping";
 
 interface AddItemModalProps {
   visible: boolean;
