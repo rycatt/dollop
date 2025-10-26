@@ -22,7 +22,7 @@ interface AddItemModalProps {
 
 const UNITS: UnitOfMeasure[] = ["lb", "oz", "pieces", "pack"];
 
-export function AddProductModal({
+export function AddItemModal({
   visible,
   onClose,
   onAddItem,
@@ -72,7 +72,7 @@ export function AddProductModal({
         >
           <View className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4">
             <Text className="text-xl font-bold text-gray-900 mb-6 text-center">
-              Add Product
+              Add Item
             </Text>
 
             <View className="mb-4">

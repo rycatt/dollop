@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -35,7 +35,6 @@ export function CreateListModal({
 }: CreateListModalProps) {
   const [listName, setListName] = useState("");
   const [budget, setBudget] = useState("");
-  const listNameRef = useRef<TextInput>(null);
 
   const handleCreateList = () => {
     if (!listName.trim() || !selectedStore) return;
@@ -96,7 +95,6 @@ export function CreateListModal({
                   List Name
                 </Text>
                 <TextInput
-                  ref={listNameRef}
                   value={listName}
                   onChangeText={setListName}
                   placeholder="Enter list name"
