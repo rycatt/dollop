@@ -9,20 +9,53 @@ interface ExpiryCardProps {
 }
 
 export const ExpiryCard = ({ name, daysLeft, status }: ExpiryCardProps) => {
-  const statusColors = {
-    success: "bg-primary-100 text-primary-800 border-primary-200",
-    warning: "bg-amber-100 text-amber-800 border-amber-200",
-    danger: "bg-red-100 text-red-800 border-red-200",
+  const statusConfig = {
+    success: {
+      bg: "bg-white",
+      text: "text-neutral-900",
+      border: "border-primary-200",
+      badge: "bg-primary-500",
+    },
+    warning: {
+      bg: "bg-white",
+      text: "text-neutral-900",
+      border: "border-amber-300",
+      badge: "bg-amber-500",
+    },
+    danger: {
+      bg: "bg-white",
+      text: "text-neutral-900",
+      border: "border-red-300",
+      badge: "bg-red-500",
+    },
   };
 
-  const [bg, text, border] = statusColors[status].split(" ");
+  const config = statusConfig[status];
 
   return (
-    <View className={`px-5 py-4 rounded-2xl mr-3 ${bg} border ${border}`}>
-      <Text className={`${text} font-semibold text-base`}>{name}</Text>
-      <Text className={`${text} font-bold text-sm mt-1 opacity-80`}>
-        {daysLeft} {daysLeft === 1 ? "day" : "days"} left
+    <View
+      className={`px-5 py-4 rounded-xl mr-3 min-w-[160px] ${config.bg} border-2 ${config.border}`}
+      style={{
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+      }}
+    >
+      <Text
+        className={`${config.text} font-extrabold text-base mb-3`}
+        numberOfLines={2}
+      >
+        {name}
       </Text>
+      <View className="flex-row items-center justify-between">
+        <View className={`${config.badge} px-3 py-1.5 rounded-lg`}>
+          <Text className="text-white font-bold text-xs">
+            {daysLeft} {daysLeft === 1 ? "day" : "days"}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 };
