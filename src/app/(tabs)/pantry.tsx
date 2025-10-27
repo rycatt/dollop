@@ -10,19 +10,17 @@ import {
   Platform,
   Animated as RNAnimated,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
+  Easing,
+  FadeIn,
+  FadeOut,
+  ZoomIn,
+  ZoomOut,
 } from "react-native-reanimated";
 import {
   SafeAreaView,
@@ -44,38 +42,12 @@ interface PantryItem {
 
 const STORAGE_KEY = "pantry_items";
 
-interface SwipeableItemProps {
+interface PantryItemCardProps {
   item: PantryItem;
-  onDelete: (itemId: string) => void;
   onPress: (item: PantryItem) => void;
 }
 
-function SwipeableItem({ item, onDelete, onPress }: SwipeableItemProps) {
-  const translateX = useSharedValue(0);
-  const revealOpacity = useSharedValue(0);
-
-  const pan = Gesture.Pan()
-    .onUpdate(({ translationX }) => {
-      translateX.value = translationX;
-      revealOpacity.value =
-        translationX < 0 ? Math.min(Math.abs(translationX) / 80, 1) : 0;
-    })
-    .onEnd(({ translationX }) => {
-      if (translationX < -100) runOnJS(onDelete)(item.id);
-      else {
-        translateX.value = withSpring(0);
-        revealOpacity.value = withTiming(0, { duration: 200 });
-      }
-    });
-
-  const cardStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
-
-  const bgStyle = useAnimatedStyle(() => ({
-    opacity: revealOpacity.value,
-  }));
-
+function PantryItemCard({ item, onPress }: PantryItemCardProps) {
   const getExpirationStatus = (i: PantryItem) => {
     if (!i.expirationDate || !isValid(i.expirationDate)) return null;
     const now = new Date();
@@ -93,83 +65,72 @@ function SwipeableItem({ item, onDelete, onPress }: SwipeableItemProps) {
   const daysAgo = formatDistanceToNow(item.updatedAt, { addSuffix: true });
 
   return (
-    <View className="mb-3 relative rounded-2xl overflow-hidden">
-      <Animated.View
-        style={[
-          {
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: "#ef4444",
-            justifyContent: "center",
-            alignItems: "flex-end",
-            paddingRight: 16,
-          },
-          bgStyle,
-        ]}
+    <View className="mb-2.5">
+      <TouchableOpacity
+        onPress={() => onPress(item)}
+        className="bg-white p-4 rounded-xl"
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.05,
+          shadowRadius: 3,
+          elevation: 1,
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.name}, ${item.quantity}`}
       >
-        <Trash2 size={24} color="white" />
-      </Animated.View>
+        <View className="flex-row items-center">
+          <View className="w-11 h-11 bg-neutral-100 rounded-xl items-center justify-center mr-3">
+            <Text className="text-xl">{item.emoji}</Text>
+          </View>
 
-      <GestureDetector gesture={pan}>
-        <Animated.View style={cardStyle}>
-          <TouchableOpacity
-            onPress={() => {
-              translateX.value = withSpring(0);
-              revealOpacity.value = withTiming(0, { duration: 200 });
-              onPress(item);
-            }}
-            className="bg-white p-4 border border-neutral-100 rounded-2xl"
-            accessibilityRole="button"
-            accessibilityLabel={`${item.name}, ${item.quantity}`}
-          >
-            <View className="flex-row items-center">
-              <View className="w-12 h-12 bg-primary-100 rounded-full items-center justify-center mr-4">
-                <Text className="text-2xl">{item.emoji}</Text>
-              </View>
-
-              <View className="flex-1">
-                <Text className="text-lg font-bold text-neutral-900 mb-1">
-                  {item.name}
-                </Text>
-                <Text className="text-sm text-neutral-500">{daysAgo}</Text>
-
-                {expirationStatus ? (
-                  <View className="mt-2">
-                    <View
-                      className={`px-3 py-1 rounded-full self-start ${
-                        expirationStatus.type === "expired"
-                          ? "bg-red-100"
-                          : "bg-amber-100"
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs font-medium ${
-                          expirationStatus.type === "expired"
-                            ? "text-red-700"
-                            : "text-amber-700"
-                        }`}
-                      >
-                        {expirationStatus.type === "expired"
-                          ? `EXPIRED ${expirationStatus.days} DAY${
-                              expirationStatus.days === 1 ? "" : "S"
-                            } AGO`
-                          : `EXPIRING IN ${expirationStatus.days} DAY${
-                              expirationStatus.days === 1 ? "" : "S"
-                            }`}
-                      </Text>
-                    </View>
-                  </View>
-                ) : null}
-              </View>
-
-              <View className="items-end">
-                <Text className="text-xl font-bold text-neutral-900">
-                  {item.quantity}
-                </Text>
-              </View>
+          <View className="flex-1">
+            <View className="flex-row items-center mb-1">
+              <Text className="text-base font-bold text-neutral-900 flex-1">
+                {item.name}
+              </Text>
+              {expirationStatus && (
+                <View
+                  className={`w-2 h-2 rounded-full ml-2 ${
+                    expirationStatus.type === "expired"
+                      ? "bg-red-500"
+                      : "bg-amber-400"
+                  }`}
+                />
+              )}
             </View>
-          </TouchableOpacity>
-        </Animated.View>
-      </GestureDetector>
+            <View className="flex-row items-center">
+              <Text className="text-xs text-neutral-400 font-medium">
+                {daysAgo}
+              </Text>
+              {expirationStatus && (
+                <>
+                  <Text className="text-neutral-300 mx-1.5">•</Text>
+                  <Text
+                    className={`text-xs font-semibold ${
+                      expirationStatus.type === "expired"
+                        ? "text-red-500"
+                        : "text-amber-500"
+                    }`}
+                  >
+                    {expirationStatus.type === "expired"
+                      ? `Expired ${expirationStatus.days}d ago`
+                      : `${expirationStatus.days}d left`}
+                  </Text>
+                </>
+              )}
+            </View>
+          </View>
+
+          <View className="items-end ml-3">
+            <View className="bg-neutral-100 rounded-lg px-2.5 py-1.5">
+              <Text className="text-sm font-bold text-neutral-700">
+                ×{item.quantity}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -182,6 +143,7 @@ export default function PantryScreen() {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PantryItem | null>(null);
+  const [isBackdropVisible, setIsBackdropVisible] = useState(false);
 
   const [fabScale] = useState(new RNAnimated.Value(1));
   const [listOpacity] = useState(new RNAnimated.Value(0));
@@ -200,6 +162,12 @@ export default function PantryScreen() {
       loadItems();
     }, []),
   );
+
+  useEffect(() => {
+    if (isDetailsModalVisible) {
+      setIsBackdropVisible(true);
+    }
+  }, [isDetailsModalVisible]);
 
   useEffect(() => {
     const showEvent =
@@ -290,11 +258,18 @@ export default function PantryScreen() {
     await saveItems(updatedItems);
   };
 
+  const closeModal = () => {
+    setSelectedItem(null);
+    setIsBackdropVisible(false);
+    setTimeout(() => {
+      setIsDetailsModalVisible(false);
+    }, 250);
+  };
+
   const deleteItem = async (itemId: string) => {
     const updatedItems = items.filter((i) => i.id !== itemId);
     await saveItems(updatedItems);
-    setIsDetailsModalVisible(false);
-    setSelectedItem(null);
+    closeModal();
   };
 
   const getExpirationStatus = (i: PantryItem) => {
@@ -331,12 +306,50 @@ export default function PantryScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50" edges={["top", "bottom"]}>
-      <View className="flex-row items-center justify-between px-6 py-3 bg-neutral-50">
-        <Text className="text-4xl font-bold text-neutral-900">Pantry</Text>
+      <View
+        className="absolute top-0 right-0 w-64 h-64 bg-primary-100 rounded-full"
+        style={{
+          opacity: 0.3,
+          transform: [{ translateX: 100 }, { translateY: -100 }],
+        }}
+      />
+      <View
+        className="absolute bottom-40 left-0 w-48 h-48 bg-secondary-100 rounded-full"
+        style={{
+          opacity: 0.25,
+          transform: [{ translateX: -80 }],
+        }}
+      />
+      <View
+        className="absolute top-80 right-10 w-32 h-32 bg-primary-200 rounded-full"
+        style={{
+          opacity: 0.2,
+        }}
+      />
+
+      <View className="flex-row items-center justify-between px-6 pt-6 pb-4 bg-neutral-50">
+        <View>
+          <Text className="text-4xl font-extrabold text-neutral-900">
+            My Pantry
+          </Text>
+          <Text className="text-neutral-500 mt-1 font-medium">
+            {filteredItems.length}{" "}
+            {filteredItems.length === 1 ? "item" : "items"}
+          </Text>
+        </View>
       </View>
 
       <View className="px-4 py-3">
-        <View className="flex-row items-center bg-white rounded-2xl px-4 py-3 border border-neutral-100">
+        <View
+          className="flex-row items-center bg-white rounded-2xl px-4 py-3 border border-neutral-200"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+        >
           <Search size={20} color="#A3A3A3" />
           <TextInput
             className="flex-1 ml-3 leading-none text-neutral-900"
@@ -364,10 +377,9 @@ export default function PantryScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {filteredItems.map((item) => (
-            <SwipeableItem
+            <PantryItemCard
               key={item.id}
               item={item}
-              onDelete={deleteItem}
               onPress={(it) => {
                 setSelectedItem(it);
                 setIsDetailsModalVisible(true);
@@ -390,7 +402,14 @@ export default function PantryScreen() {
             animateFab();
             setIsAddModalVisible(true);
           }}
-          className="w-16 h-16 bg-primary-500 rounded-full items-center justify-center shadow-lg"
+          className="w-16 h-16 bg-primary-500 rounded-full items-center justify-center"
+          style={{
+            shadowColor: "#047857",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 6,
+          }}
           accessibilityRole="button"
           accessibilityLabel="Add new item"
         >
@@ -404,144 +423,182 @@ export default function PantryScreen() {
         onAddItem={addItem}
       />
 
-      <Modal visible={isDetailsModalVisible} transparent animationType="fade">
-        <View className="flex-1 bg-black/50 justify-center items-center p-4">
-          {selectedItem ? (
-            <View className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-lg">
-              <View className="flex-row items-center justify-between mb-6">
-                <Text className="text-xl font-bold text-neutral-900">
-                  Item Details
-                </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    setIsDetailsModalVisible(false);
-                    setSelectedItem(null);
-                  }}
-                  className="p-1"
-                >
-                  <X size={20} color="#737373" />
-                </TouchableOpacity>
+      <Modal
+        visible={isDetailsModalVisible}
+        transparent
+        animationType="none"
+        onRequestClose={closeModal}
+      >
+        <View className="flex-1 justify-center items-center p-6">
+          {isBackdropVisible && (
+            <Animated.View
+              key="backdrop"
+              entering={FadeIn.duration(250).easing(
+                Easing.bezier(0.4, 0, 0.2, 1),
+              )}
+              exiting={FadeOut.duration(200).easing(
+                Easing.bezier(0.4, 0, 0.2, 1),
+              )}
+              className="absolute inset-0 bg-black/60"
+            >
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={closeModal}
+                className="flex-1"
+              />
+            </Animated.View>
+          )}
+          {selectedItem && (
+            <Animated.View
+              key={selectedItem.id}
+              entering={ZoomIn.duration(300).easing(
+                Easing.bezier(0.4, 0, 0.2, 1),
+              )}
+              exiting={ZoomOut.duration(220).easing(
+                Easing.bezier(0.4, 0, 0.2, 1),
+              )}
+              className="bg-white rounded-3xl w-full max-w-md"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.15,
+                shadowRadius: 20,
+                elevation: 10,
+              }}
+            >
+              <View className="px-6 pt-6 pb-4 border-b border-neutral-100">
+                <View className="flex-row items-center justify-between mb-4">
+                  <View className="flex-row items-center flex-1">
+                    <View className="w-14 h-14 bg-neutral-100 rounded-2xl items-center justify-center mr-4">
+                      <Text className="text-3xl">{selectedItem.emoji}</Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-xl font-bold text-neutral-900 mb-1">
+                        {selectedItem.name}
+                      </Text>
+                      <Text className="text-sm text-neutral-500 font-medium">
+                        {formatDistanceToNow(selectedItem.updatedAt, {
+                          addSuffix: true,
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={closeModal}
+                    className="w-9 h-9 bg-neutral-100 rounded-full items-center justify-center ml-2"
+                  >
+                    <X size={18} color="#525252" />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               <ScrollView
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
                 style={{ maxHeight: 400 }}
+                className="px-6 py-5"
               >
-                <View className="items-center mb-6">
-                  <View className="w-20 h-20 bg-primary-100 rounded-full items-center justify-center mb-4">
-                    <Text className="text-4xl">{selectedItem.emoji}</Text>
+                <View className="flex-row mb-4">
+                  <View className="flex-1 mr-2">
+                    <Text className="text-xs text-neutral-400 mb-2 font-medium">
+                      QUANTITY
+                    </Text>
+                    <View className="bg-neutral-50 rounded-xl p-3">
+                      <Text className="text-2xl font-bold text-neutral-900">
+                        {selectedItem.quantity}
+                      </Text>
+                    </View>
                   </View>
-                  <Text className="text-2xl font-bold text-neutral-900 text-center">
-                    {selectedItem.name}
-                  </Text>
+
+                  <View className="flex-1 ml-2">
+                    <Text className="text-xs text-neutral-400 mb-2 font-medium">
+                      LOCATION
+                    </Text>
+                    <View className="bg-neutral-50 rounded-xl p-3">
+                      <Text className="text-base font-bold text-neutral-900">
+                        {selectedItem.storageLocation}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
 
-                <View className="space-y-4">
-                  <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
-                    <Text className="text-sm text-neutral-500 mb-1">
-                      Quantity
+                {selectedItem.expirationDate &&
+                isValid(selectedItem.expirationDate) ? (
+                  <View className="mb-4">
+                    <Text className="text-xs text-neutral-400 mb-2 font-medium">
+                      EXPIRATION
                     </Text>
-                    <Text className="text-lg font-bold text-neutral-900">
-                      {selectedItem.quantity}
-                    </Text>
-                  </View>
-
-                  <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
-                    <Text className="text-sm text-neutral-500 mb-1">
-                      Storage Location
-                    </Text>
-                    <Text className="text-lg font-bold text-neutral-900">
-                      {selectedItem.storageLocation}
-                    </Text>
-                  </View>
-
-                  {selectedItem.expirationDate &&
-                  isValid(selectedItem.expirationDate) ? (
-                    <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
-                      <Text className="text-sm text-neutral-500 mb-1">
-                        Expiration Date
-                      </Text>
-                      <Text className="text-lg font-bold text-neutral-900">
-                        {format(selectedItem.expirationDate, "MM/dd/yyyy")}
-                      </Text>
-                      {(() => {
-                        const st = getExpirationStatus(selectedItem);
-                        if (!st) return null;
-                        return (
-                          <View className="mt-2">
-                            <View
-                              className={`px-3 py-1 rounded-full self-start ${
-                                st.type === "expired"
-                                  ? "bg-red-100"
-                                  : "bg-amber-100"
-                              }`}
-                            >
-                              <Text
-                                className={`text-xs font-medium ${
+                    <View className="bg-neutral-50 rounded-xl p-3">
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-base font-bold text-neutral-900">
+                          {format(selectedItem.expirationDate, "MMM dd, yyyy")}
+                        </Text>
+                        {(() => {
+                          const st = getExpirationStatus(selectedItem);
+                          if (!st) return null;
+                          return (
+                            <View className="flex-row items-center">
+                              <View
+                                className={`w-1.5 h-1.5 rounded-full mr-2 ${
                                   st.type === "expired"
-                                    ? "text-red-700"
-                                    : "text-amber-700"
+                                    ? "bg-red-500"
+                                    : "bg-amber-400"
+                                }`}
+                              />
+                              <Text
+                                className={`text-xs font-semibold ${
+                                  st.type === "expired"
+                                    ? "text-red-500"
+                                    : "text-amber-500"
                                 }`}
                               >
                                 {st.type === "expired"
-                                  ? `EXPIRED ${st.days} DAY${st.days === 1 ? "" : "S"} AGO`
-                                  : `EXPIRING IN ${st.days} DAY${st.days === 1 ? "" : "S"}`}
+                                  ? `${st.days}d ago`
+                                  : `${st.days}d left`}
                               </Text>
                             </View>
-                          </View>
-                        );
-                      })()}
+                          );
+                        })()}
+                      </View>
                     </View>
-                  ) : null}
+                  </View>
+                ) : null}
 
-                  {selectedItem.notes ? (
-                    <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
-                      <Text className="text-sm text-neutral-500 mb-1">
-                        Notes
-                      </Text>
-                      <Text className="text-lg font-bold text-neutral-900">
+                {selectedItem.notes ? (
+                  <View className="mb-4">
+                    <Text className="text-xs text-neutral-400 mb-2 font-medium">
+                      NOTES
+                    </Text>
+                    <View className="bg-neutral-50 rounded-xl p-3">
+                      <Text className="text-sm text-neutral-700 leading-relaxed">
                         {selectedItem.notes}
                       </Text>
                     </View>
-                  ) : null}
-
-                  <View className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100">
-                    <Text className="text-sm text-neutral-500 mb-1">
-                      Last Updated
-                    </Text>
-                    <Text className="text-lg font-bold text-neutral-900">
-                      {formatDistanceToNow(selectedItem.updatedAt, {
-                        addSuffix: true,
-                      })}
-                    </Text>
                   </View>
-                </View>
+                ) : null}
               </ScrollView>
 
-              <View className="flex-row gap-3 mt-6">
+              <View className="px-6 py-4 border-t border-neutral-100 flex-row gap-3">
                 <TouchableOpacity
-                  onPress={() => {
-                    setIsDetailsModalVisible(false);
-                    setSelectedItem(null);
-                  }}
-                  className="flex-1 py-4 rounded-2xl border border-neutral-200"
+                  onPress={closeModal}
+                  className="flex-1 py-3.5 rounded-xl bg-neutral-100"
                 >
-                  <Text className="text-neutral-700 font-semibold text-center">
+                  <Text className="text-neutral-700 font-bold text-base text-center">
                     Close
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => deleteItem(selectedItem.id)}
-                  className="flex-1 bg-red-500 py-4 rounded-2xl"
+                  className="flex-1 py-3.5 rounded-xl bg-red-50 flex-row items-center justify-center"
                 >
-                  <Text className="text-white font-semibold text-center">
-                    Delete Item
+                  <Trash2 size={18} color="#EF4444" />
+                  <Text className="text-red-500 font-bold text-base ml-2">
+                    Delete
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          ) : null}
+            </Animated.View>
+          )}
         </View>
       </Modal>
     </SafeAreaView>
