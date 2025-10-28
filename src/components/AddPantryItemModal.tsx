@@ -159,9 +159,6 @@ export function AddPantryItemModal({
                   <Text className="text-7xl mb-2">
                     {formData.emoji || DEFAULT_EMOJI}
                   </Text>
-                  <Text className="text-xs text-neutral-400 font-medium">
-                    Tap emoji field below to change
-                  </Text>
                 </View>
 
                 <View className="mb-5">

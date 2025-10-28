@@ -86,18 +86,6 @@ export default function HomeScreen() {
           <Text className="text-neutral-600 text-sm font-medium">
             Grocery spending
           </Text>
-          <View className="mt-4 pt-4 border-t border-neutral-100 flex-row items-center">
-            <View className="bg-primary-50 rounded-full p-2 mr-2">
-              <MaterialCommunityIcons
-                name="trending-up"
-                size={16}
-                color="#10B981"
-              />
-            </View>
-            <Text className="text-neutral-600 text-xs">
-              On track with your budget
-            </Text>
-          </View>
         </View>
 
         <View className="px-4 mb-2">
