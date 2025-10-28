@@ -40,13 +40,26 @@ export function AddItemModal({
     }
   }, [visible]);
 
-  const handleAddItem = () => {
-    if (!itemName.trim()) return;
+  const handleQuantityChange = (value: string) => {
+    const sanitized = value.replace(/[^0-9]/g, "");
+    setQuantity(sanitized === "" ? "" : String(parseInt(sanitized, 10)));
+  };
 
-    const quantityNum = parseInt(quantity) || 1;
+  const adjustQuantity = (delta: number) => {
+    const next = Math.max(1, (parseInt(quantity, 10) || 0) + delta);
+    setQuantity(String(next));
+  };
+
+  const handleAddItem = () => {
+    const trimmedName = itemName.trim();
+    const quantityValue = parseInt(quantity, 10);
+    if (!trimmedName || !quantity || !Number.isInteger(quantityValue) || quantityValue < 1) {
+      return;
+    }
+
     onAddItem({
-      name: itemName.trim(),
-      quantity: quantityNum,
+      name: trimmedName,
+      quantity: Math.max(1, quantityValue),
       unit,
     });
 
@@ -63,6 +76,12 @@ export function AddItemModal({
     onClose();
   };
 
+  const isAddDisabled =
+    !itemName.trim() ||
+    !quantity ||
+    Number.isNaN(parseInt(quantity, 10)) ||
+    parseInt(quantity, 10) < 1;
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View className="flex-1 bg-black/50 justify-center items-center">
@@ -70,7 +89,7 @@ export function AddItemModal({
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           className="w-full items-center justify-center"
         >
-          <View className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4">
+          <View className="bg-white rounded-3xl p-6 w-full max-w-sm mx-4 shadow-lg">
             <Text className="text-xl font-bold text-gray-900 mb-6 text-center">
               Add Item
             </Text>
@@ -83,9 +102,9 @@ export function AddItemModal({
                 ref={itemNameRef}
                 value={itemName}
                 onChangeText={setItemName}
-                placeholder="Enter product name"
-                placeholderTextColor="#6b7280"
-                className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-base text-gray-900"
+                placeholder="e.g. Honeycrisp apples"
+                placeholderTextColor="#9ca3af"
+                className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-base text-gray-900"
                 returnKeyType="next"
                 autoFocus
               />
@@ -95,15 +114,34 @@ export function AddItemModal({
               <Text className="text-sm font-medium text-gray-700 mb-2">
                 Quantity
               </Text>
-              <TextInput
-                value={quantity}
-                onChangeText={setQuantity}
-                placeholder="1"
-                placeholderTextColor="#6b7280"
-                className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-base text-gray-900"
-                keyboardType="numeric"
-                returnKeyType="next"
-              />
+              <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-2xl">
+                <TouchableOpacity
+                  onPress={() => adjustQuantity(-1)}
+                  className="w-14 h-12 items-center justify-center"
+                  accessibilityLabel="Decrease quantity"
+                >
+                  <Text className="text-xl text-gray-600">-</Text>
+                </TouchableOpacity>
+                <TextInput
+                  value={quantity}
+                  onChangeText={handleQuantityChange}
+                  placeholder="1"
+                  placeholderTextColor="#9ca3af"
+                  className="flex-1 px-2 text-center text-lg text-gray-900"
+                  keyboardType="number-pad"
+                  returnKeyType="next"
+                />
+                <TouchableOpacity
+                  onPress={() => adjustQuantity(1)}
+                  className="w-14 h-12 items-center justify-center"
+                  accessibilityLabel="Increase quantity"
+                >
+                  <Text className="text-xl text-gray-600">+</Text>
+                </TouchableOpacity>
+              </View>
+              <Text className="text-xs text-gray-500 mt-1">
+                Whole numbers only — minimum of 1 item.
+              </Text>
             </View>
 
             <View className="mb-6">
@@ -136,7 +174,7 @@ export function AddItemModal({
             <View className="flex-row gap-3">
               <TouchableOpacity
                 onPress={handleCancel}
-                className="flex-1 bg-gray-100 py-4 rounded-xl"
+                className="flex-1 bg-gray-100 py-4 rounded-2xl"
               >
                 <Text className="text-gray-700 font-medium text-center">
                   Cancel
@@ -144,9 +182,17 @@ export function AddItemModal({
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleAddItem}
-                className="flex-1 bg-green-500 py-4 rounded-xl"
+                disabled={isAddDisabled}
+                className={`flex-1 py-4 rounded-2xl ${
+                  isAddDisabled ? "bg-green-300" : "bg-green-500"
+                }`}
+                activeOpacity={isAddDisabled ? 1 : 0.7}
               >
-                <Text className="text-white font-medium text-center">
+                <Text
+                  className={`font-medium text-center ${
+                    isAddDisabled ? "text-white/70" : "text-white"
+                  }`}
+                >
                   Add Item
                 </Text>
               </TouchableOpacity>
