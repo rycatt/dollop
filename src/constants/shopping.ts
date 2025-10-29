@@ -1,4 +1,61 @@
 export type UnitOfMeasure = "lb" | "oz" | "pieces" | "pack";
+export const UNIT_OPTIONS: readonly UnitOfMeasure[] = [
+  "lb",
+  "oz",
+  "pieces",
+  "pack",
+];
+
+export const CATEGORY_OPTIONS = [
+  "Produce",
+  "Dairy",
+  "Meat",
+  "Bakery",
+  "Pantry",
+  "Snacks",
+  "Frozen",
+  "Beverages",
+  "Household",
+  "Party",
+  "Other",
+] as const;
+
+export type CategoryName = (typeof CATEGORY_OPTIONS)[number];
+export const DEFAULT_CATEGORY: CategoryName = "Other";
+
+const CATEGORY_COLOR_MAP: Record<CategoryName, string> = {
+  Produce: "bg-primary-500",
+  Dairy: "bg-secondary-500",
+  Meat: "bg-accent-500",
+  Bakery: "bg-primary-400",
+  Pantry: "bg-secondary-400",
+  Snacks: "bg-info",
+  Frozen: "bg-primary-600",
+  Beverages: "bg-secondary-600",
+  Household: "bg-accent-400",
+  Party: "bg-secondary-500",
+  Other: "bg-neutral-400",
+};
+
+export function sanitizeCategory(category?: string | null): CategoryName {
+  if (!category) {
+    return DEFAULT_CATEGORY;
+  }
+  const trimmed = category.trim();
+  if (!trimmed) {
+    return DEFAULT_CATEGORY;
+  }
+
+  const match = CATEGORY_OPTIONS.find(
+    (option) => option.toLowerCase() === trimmed.toLowerCase(),
+  );
+
+  return (match ?? DEFAULT_CATEGORY) as CategoryName;
+}
+
+export function getCategoryColorClass(category?: string | null): string {
+  return CATEGORY_COLOR_MAP[sanitizeCategory(category)];
+}
 
 export interface StoreInfo {
   id: string;
@@ -15,7 +72,7 @@ export interface ShoppingListItem {
   price: number;
   originalPrice?: number;
   isChecked: boolean;
-  category?: string;
+  category?: CategoryName;
   storeId?: string;
   store?: StoreInfo;
 }

@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { isValid } from "date-fns";
-import { ShoppingList } from "../constants/shopping";
+import { ShoppingList, sanitizeCategory } from "../constants/shopping";
 
 const SHOPPING_STORAGE_KEY = "shopping_lists";
 const PANTRY_STORAGE_KEY = "pantry_items";
@@ -61,7 +61,7 @@ export async function calculateCategoryBreakdown(): Promise<
 
     lists.forEach((list) => {
       list.items.forEach((item) => {
-        const category = item.category || "Other";
+        const category = sanitizeCategory(item.category);
         categoryTotals[category] = (categoryTotals[category] || 0) + item.price;
         grandTotal += item.price;
       });
@@ -78,6 +78,37 @@ export async function calculateCategoryBreakdown(): Promise<
     return breakdown.sort((a, b) => b.amount - a.amount);
   } catch (error) {
     console.error("Error calculating category breakdown:", error);
+    return [];
+  }
+}
+
+export async function getStoredShoppingLists(): Promise<ShoppingList[]> {
+  try {
+    const stored = await AsyncStorage.getItem(SHOPPING_STORAGE_KEY);
+    if (!stored) return [];
+
+    const rawLists: any[] = JSON.parse(stored);
+
+    return rawLists.map((list) => {
+      const createdAt = new Date(list.createdAt);
+
+      return {
+        ...list,
+        createdAt: isValid(createdAt) ? createdAt : new Date(),
+        items: Array.isArray(list.items)
+          ? list.items.map((item: any) => ({
+              ...item,
+              price:
+                typeof item.price === "number"
+                  ? item.price
+                  : Number(item.price) || 0,
+              category: sanitizeCategory(item.category),
+            }))
+          : [],
+      };
+    });
+  } catch (error) {
+    console.error("Error loading stored shopping lists:", error);
     return [];
   }
 }
@@ -125,12 +156,4 @@ export async function getExpiringItems(): Promise<ExpiringItem[]> {
     console.error("Error getting expiring items:", error);
     return [];
   }
-}
-
-export function subscribeToDataChanges(
-  callback: () => void,
-  intervalMs: number = 1000,
-): () => void {
-  const interval = setInterval(callback, intervalMs);
-  return () => clearInterval(interval);
 }

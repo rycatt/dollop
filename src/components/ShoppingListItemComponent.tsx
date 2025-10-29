@@ -1,7 +1,11 @@
 import { Check, Trash2 } from "lucide-react-native";
 import React from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
-import { ShoppingListItem } from "../constants/shopping";
+import {
+  getCategoryColorClass,
+  sanitizeCategory,
+  type ShoppingListItem,
+} from "../constants/shopping";
 
 interface ShoppingListItemComponentProps {
   item: ShoppingListItem;
@@ -14,6 +18,9 @@ export function ShoppingListItemComponent({
   onToggle,
   onDelete,
 }: ShoppingListItemComponentProps) {
+  const categoryLabel = sanitizeCategory(item.category);
+  const categoryColor = getCategoryColorClass(categoryLabel);
+
   return (
     <View className="flex-row items-center p-4 border-b border-neutral-100">
       <TouchableOpacity
@@ -40,11 +47,21 @@ export function ShoppingListItemComponent({
         <Text className="text-sm text-neutral-500 mt-0.5">
           {item.quantity} {item.unit}
         </Text>
-        {item.store ? (
-          <View className="flex-row items-center mt-1">
-            <Text className="text-xs text-neutral-400">{item.store.name}</Text>
+        <View className="flex-row items-center mt-2">
+          <View className="flex-row items-center bg-neutral-100 rounded-full px-2.5 py-1">
+            <View className={`w-2 h-2 rounded-full ${categoryColor} mr-2`} />
+            <Text className="text-xs font-semibold text-neutral-600">
+              {categoryLabel}
+            </Text>
           </View>
-        ) : null}
+          {item.store ? (
+            <View className="flex-row items-center ml-2">
+              <Text className="text-xs text-neutral-400">
+                {item.store.name}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       </View>
 
       <View className="items-end">

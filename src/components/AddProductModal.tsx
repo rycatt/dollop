@@ -10,7 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { UnitOfMeasure } from "../constants/shopping";
+import {
+  CATEGORY_OPTIONS,
+  DEFAULT_CATEGORY,
+  UNIT_OPTIONS,
+  type CategoryName,
+  type UnitOfMeasure,
+} from "../constants/shopping";
 
 interface AddItemModalProps {
   visible: boolean;
@@ -20,11 +26,10 @@ interface AddItemModalProps {
     quantity: number;
     unit: UnitOfMeasure;
     price?: number;
+    category: CategoryName;
   }) => void;
   requireManualPrice?: boolean;
 }
-
-const UNITS: UnitOfMeasure[] = ["lb", "oz", "pieces", "pack"];
 
 export function AddProductModal({
   visible,
@@ -32,10 +37,12 @@ export function AddProductModal({
   onAddItem,
   requireManualPrice = false,
 }: AddItemModalProps) {
+  const initialUnit = (UNIT_OPTIONS[2] ?? UNIT_OPTIONS[0]) as UnitOfMeasure;
   const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [unit, setUnit] = useState<UnitOfMeasure>("pieces");
+  const [unit, setUnit] = useState<UnitOfMeasure>(initialUnit);
   const [price, setPrice] = useState("");
+  const [category, setCategory] = useState<CategoryName>(DEFAULT_CATEGORY);
   const itemNameRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -66,20 +73,23 @@ export function AddProductModal({
       quantity: quantityNum,
       unit,
       price: priceNum,
+      category,
     });
 
     setItemName("");
     setQuantity("1");
-    setUnit("pieces");
+    setUnit(initialUnit);
     setPrice("");
+    setCategory(DEFAULT_CATEGORY);
     onClose();
   };
 
   const handleCancel = () => {
     setItemName("");
     setQuantity("1");
-    setUnit("pieces");
+    setUnit(initialUnit);
     setPrice("");
+    setCategory(DEFAULT_CATEGORY);
     onClose();
   };
 
@@ -190,7 +200,7 @@ export function AddProductModal({
                     Unit of Measure
                   </Text>
                   <View className="flex-row gap-2.5">
-                    {UNITS.map((unitOption) => (
+                    {UNIT_OPTIONS.map((unitOption) => (
                       <TouchableOpacity
                         key={unitOption}
                         onPress={() => setUnit(unitOption)}
@@ -211,6 +221,36 @@ export function AddProductModal({
                         </Text>
                       </TouchableOpacity>
                     ))}
+                  </View>
+                </View>
+
+                <View className="mb-5">
+                  <Text className="text-sm font-semibold text-neutral-700 mb-2.5">
+                    Category
+                  </Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {CATEGORY_OPTIONS.map((option) => {
+                      const isActive = category === option;
+                      return (
+                        <TouchableOpacity
+                          key={option}
+                          onPress={() => setCategory(option)}
+                          className={`px-4 py-2 rounded-2xl border ${
+                            isActive
+                              ? "border-secondary-500 bg-secondary-500"
+                              : "border-neutral-200 bg-neutral-50"
+                          }`}
+                        >
+                          <Text
+                            className={`text-sm font-semibold ${
+                              isActive ? "text-white" : "text-neutral-600"
+                            }`}
+                          >
+                            {option}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 </View>
 

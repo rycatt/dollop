@@ -27,15 +27,18 @@ import {
   ShoppingList,
   STORAGE_KEY,
   StoreInfo,
-  UnitOfMeasure,
+  sanitizeCategory,
+  type CategoryName,
+  type UnitOfMeasure,
 } from "../../constants/shopping";
+import { getStoredShoppingLists } from "../../utils/dataSync";
 
 export default function ShoppingListScreen() {
   const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
   const [selectedList, setSelectedList] = useState<ShoppingList | null>(null);
   const [selectedStore, setSelectedStore] = useState<StoreInfo | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showCreateListModal, setShowCreateListModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -48,28 +51,47 @@ export default function ShoppingListScreen() {
   }, []);
 
   const loadShoppingLists = useCallback(async () => {
-    try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const lists = parsed.map((list: any) => ({
-          ...list,
-          createdAt: new Date(list.createdAt),
-          items: list.items.map((item: any) => ({
-            ...item,
-            store: list.store
-              ? AVAILABLE_STORES.find((s) => s.id === list.storeId)
-              : undefined,
-          })),
+    const normalizeLists = (lists: ShoppingList[]): ShoppingList[] =>
+      lists.map((list) => {
+        const resolvedStore =
+          list.store ??
+          (list.storeId
+            ? AVAILABLE_STORES.find((store) => store.id === list.storeId)
+            : undefined);
+
+        const normalizedItems = (list.items ?? []).map((item) => ({
+          ...item,
+          category: sanitizeCategory(item.category),
+          store: resolvedStore,
         }));
-        setShoppingLists(lists);
+
+        const createdAt =
+          list.createdAt instanceof Date
+            ? list.createdAt
+            : new Date(list.createdAt);
+
+        return {
+          ...list,
+          createdAt,
+          store: resolvedStore,
+          items: normalizedItems,
+        };
+      });
+
+    try {
+      const storedLists = await getStoredShoppingLists();
+      if (storedLists.length > 0) {
+        const hydratedLists = normalizeLists(storedLists);
+        setShoppingLists(hydratedLists);
       } else {
-        setShoppingLists(mockShoppingLists);
-        await saveShoppingLists(mockShoppingLists);
+        const fallbackLists = normalizeLists(mockShoppingLists);
+        setShoppingLists(fallbackLists);
+        await saveShoppingLists(fallbackLists);
       }
     } catch (error) {
       console.error("Error loading shopping lists:", error);
-      setShoppingLists(mockShoppingLists);
+      const fallbackLists = normalizeLists(mockShoppingLists);
+      setShoppingLists(fallbackLists);
     } finally {
       setLoading(false);
     }
@@ -92,10 +114,15 @@ export default function ShoppingListScreen() {
     (items: ShoppingList["items"]) => {
       if (!selectedList) return;
 
+      const normalizedItems = items.map((item) => ({
+        ...item,
+        category: sanitizeCategory(item.category),
+      }));
+
       const updated = {
         ...selectedList,
-        items,
-        totalSpent: calculateTotal(items),
+        items: normalizedItems,
+        totalSpent: calculateTotal(normalizedItems),
       };
 
       setSelectedList(updated);
@@ -134,11 +161,13 @@ export default function ShoppingListScreen() {
       quantity: number;
       unit: UnitOfMeasure;
       price?: number;
+      category: CategoryName;
     }) => {
       if (!selectedList) return;
 
       const price =
         itemData.price ?? Math.round((Math.random() * 8 + 0.99) * 100) / 100;
+      const category = sanitizeCategory(itemData.category);
 
       const newItem = {
         id: Date.now().toString(),
@@ -147,8 +176,9 @@ export default function ShoppingListScreen() {
         unit: itemData.unit,
         price,
         isChecked: false,
-        category: "General",
+        category,
         storeId: selectedList.storeId,
+        store: selectedList.store,
       };
 
       updateList([...selectedList.items, newItem]);
@@ -342,7 +372,7 @@ export default function ShoppingListScreen() {
 
             <View className="mx-6 mb-4">
               <TouchableOpacity
-                onPress={() => setShowAddItemModal(true)}
+                onPress={() => setShowAddProductModal(true)}
                 className="bg-primary-500 active:bg-primary-600 py-4 rounded-2xl flex-row items-center justify-center"
                 style={{
                   shadowColor: "#10B981",
@@ -396,8 +426,8 @@ export default function ShoppingListScreen() {
         </SafeAreaView>
 
         <AddProductModal
-          visible={showAddItemModal}
-          onClose={() => setShowAddItemModal(false)}
+          visible={showAddProductModal}
+          onClose={() => setShowAddProductModal(false)}
           onAddItem={handleAddProduct}
           requireManualPrice={selectedList?.storeId === "5"}
         />
