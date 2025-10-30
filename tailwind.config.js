@@ -81,4 +81,13 @@ module.exports = {
     },
   },
   plugins: [],
+  safelist: [
+    {
+      pattern:
+        /bg-(primary|secondary|accent|neutral)-(50|100|200|300|400|500|600|700|800|900)/,
+    },
+    "bg-info",
+    "bg-warning",
+    "bg-danger",
+  ],
 };

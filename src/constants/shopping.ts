@@ -25,15 +25,15 @@ export const DEFAULT_CATEGORY: CategoryName = "Other";
 
 const CATEGORY_COLOR_MAP: Record<CategoryName, string> = {
   Produce: "bg-primary-500",
-  Dairy: "bg-secondary-500",
-  Meat: "bg-accent-500",
-  Bakery: "bg-primary-400",
-  Pantry: "bg-secondary-400",
-  Snacks: "bg-info",
-  Frozen: "bg-primary-600",
-  Beverages: "bg-secondary-600",
-  Household: "bg-accent-400",
-  Party: "bg-secondary-500",
+  Dairy: "bg-secondary-400",
+  Meat: "bg-danger",
+  Bakery: "bg-accent-400",
+  Pantry: "bg-secondary-600",
+  Snacks: "bg-warning",
+  Frozen: "bg-info",
+  Beverages: "bg-primary-400",
+  Household: "bg-neutral-500",
+  Party: "bg-accent-500",
   Other: "bg-neutral-400",
 };
 

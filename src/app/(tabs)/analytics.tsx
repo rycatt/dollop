@@ -177,23 +177,6 @@ export default function AnalyticsScreen() {
   }, [filteredLists]);
 
   const hasData = totalSpend > 0 && categoryBreakdown.length > 0;
-  const totalCategories = categoryBreakdown.length;
-  const averagePerCategory =
-    totalCategories > 0 ? totalSpend / totalCategories : 0;
-  const topCategory = topCategories[0];
-  const secondCategory = topCategories[1];
-
-  const insightCopy = useMemo(() => {
-    if (!topCategory) {
-      return `No tracked spending for this range${
-        selectedListId === LIST_ALL ? "" : ` in ${selectedListLabel}`
-      }. Add prices to surface tailored tips.`;
-    }
-    if (!secondCategory) {
-      return `Most of your spend sits in ${topCategory.category}. Keep tracking to balance things out.`;
-    }
-    return `${topCategory.category} leads with ${Math.round(topCategory.percentage)}% of your total, followed by ${secondCategory.category} at ${Math.round(secondCategory.percentage)}%.`;
-  }, [selectedListId, selectedListLabel, topCategory, secondCategory]);
 
   const spotlightDots = useMemo(() => {
     return topCategories.flatMap((cat) => {
@@ -443,17 +426,10 @@ export default function AnalyticsScreen() {
               )}
             </View>
 
-            <Text className="text-neutral-500 mt-5 leading-6">
-              {insightCopy}
-            </Text>
-
             <View className="mt-6">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-neutral-500 text-xs uppercase tracking-widest font-semibold">
                   Category share
-                </Text>
-                <Text className="text-neutral-400 text-xs">
-                  proportional to spend
                 </Text>
               </View>
               <View className="h-10 bg-neutral-100 rounded-full overflow-hidden flex-row">
