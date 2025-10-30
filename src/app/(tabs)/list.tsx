@@ -23,11 +23,10 @@ import { CreateListModal } from "../../components/CreateListModal";
 import { ShoppingListItemComponent } from "../../components/ShoppingListItemComponent";
 import {
   AVAILABLE_STORES,
-  mockShoppingLists,
+  sanitizeCategory,
   ShoppingList,
   STORAGE_KEY,
   StoreInfo,
-  sanitizeCategory,
   type CategoryName,
   type UnitOfMeasure,
 } from "../../constants/shopping";
@@ -84,14 +83,12 @@ export default function ShoppingListScreen() {
         const hydratedLists = normalizeLists(storedLists);
         setShoppingLists(hydratedLists);
       } else {
-        const fallbackLists = normalizeLists(mockShoppingLists);
-        setShoppingLists(fallbackLists);
-        await saveShoppingLists(fallbackLists);
+        setShoppingLists([]);
+        await saveShoppingLists([]);
       }
     } catch (error) {
       console.error("Error loading shopping lists:", error);
-      const fallbackLists = normalizeLists(mockShoppingLists);
-      setShoppingLists(fallbackLists);
+      setShoppingLists([]);
     } finally {
       setLoading(false);
     }
