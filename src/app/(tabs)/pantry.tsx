@@ -56,7 +56,7 @@ function PantryItemCard({ item, onPress }: PantryItemCardProps) {
     );
     if (daysUntilExpiry < 0)
       return { type: "expired", days: Math.abs(daysUntilExpiry) as number };
-    if (daysUntilExpiry <= 2)
+    if (daysUntilExpiry <= 3)
       return { type: "expiring", days: daysUntilExpiry as number };
     return null;
   };
@@ -280,7 +280,7 @@ export default function PantryScreen() {
     );
     if (daysUntilExpiry < 0)
       return { type: "expired", days: Math.abs(daysUntilExpiry) as number };
-    if (daysUntilExpiry <= 2)
+    if (daysUntilExpiry <= 3)
       return { type: "expiring", days: daysUntilExpiry as number };
     return null;
   };
@@ -320,28 +320,21 @@ export default function PantryScreen() {
           transform: [{ translateX: -80 }],
         }}
       />
-      <View
-        className="absolute top-80 right-10 w-32 h-32 bg-primary-200 rounded-full"
-        style={{
-          opacity: 0.2,
-        }}
-      />
 
-      <View className="flex-row items-center justify-between px-6 pt-6 pb-4 bg-neutral-50">
-        <View>
-          <Text className="text-4xl font-extrabold text-neutral-900">
-            My Pantry
-          </Text>
-          <Text className="text-neutral-500 mt-1 font-medium">
-            {filteredItems.length}{" "}
-            {filteredItems.length === 1 ? "item" : "items"}
+      <View className="px-6 pt-10 pb-6">
+        <Text className="text-neutral-900 font-extrabold text-4xl leading-tight mb-2">
+          Pantry
+        </Text>
+        <View className="bg-secondary-500 rounded-2xl px-4 py-2 self-start">
+          <Text className="text-white font-extrabold text-2xl">
+            Track your items
           </Text>
         </View>
       </View>
 
-      <View className="px-4 py-3">
+      <View className="px-6 mb-4">
         <View
-          className="flex-row items-center bg-white rounded-2xl px-4 py-3 border border-neutral-200"
+          className="bg-white rounded-3xl border border-neutral-200 px-4 py-4 flex-row items-center shadow-sm"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
@@ -352,8 +345,8 @@ export default function PantryScreen() {
         >
           <Search size={20} color="#A3A3A3" />
           <TextInput
-            className="flex-1 ml-3 leading-none text-neutral-900"
-            placeholder="Search your pantry"
+            className="flex-1 ml-3 text-neutral-900 font-medium"
+            placeholder="Search your pantry..."
             placeholderTextColor="#A3A3A3"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -363,29 +356,69 @@ export default function PantryScreen() {
         </View>
       </View>
 
+      <View className="px-6 mb-3 flex-row items-center">
+        <Text className="text-neutral-500 font-medium">
+          {filteredItems.length} {filteredItems.length === 1 ? "item" : "items"}
+        </Text>
+
+        {(() => {
+          const expiringCount = filteredItems.filter((i) => {
+            if (!i.expirationDate || !isValid(i.expirationDate)) return false;
+            const daysUntil = Math.ceil(
+              (i.expirationDate.getTime() - new Date().getTime()) /
+                (1000 * 60 * 60 * 24),
+            );
+            return daysUntil <= 3 && daysUntil >= 0;
+          }).length;
+
+          if (expiringCount > 0) {
+            return (
+              <>
+                <Text className="text-neutral-300 mx-1.5">•</Text>
+                <Text className="text-amber-600 font-semibold">
+                  {expiringCount} expiring
+                </Text>
+              </>
+            );
+          }
+          return null;
+        })()}
+      </View>
+
       <RNAnimated.View style={{ flex: 1, opacity: listOpacity }}>
         <ScrollView
-          className="flex-1 px-4 py-2"
+          className="flex-1 px-6"
           showsVerticalScrollIndicator={false}
-          accessibilityRole="list"
-          contentInsetAdjustmentBehavior={
-            Platform.OS === "ios" ? "automatic" : undefined
-          }
           contentContainerStyle={{
-            paddingBottom: (insets.bottom || 0) + 96,
+            paddingBottom: (insets.bottom || 0) + 110,
           }}
           keyboardShouldPersistTaps="handled"
         >
-          {filteredItems.map((item) => (
-            <PantryItemCard
-              key={item.id}
-              item={item}
-              onPress={(it) => {
-                setSelectedItem(it);
-                setIsDetailsModalVisible(true);
-              }}
-            />
-          ))}
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item) => (
+              <PantryItemCard
+                key={item.id}
+                item={item}
+                onPress={(it) => {
+                  setSelectedItem(it);
+                  setIsDetailsModalVisible(true);
+                }}
+              />
+            ))
+          ) : (
+            <View className="bg-white rounded-4xl border border-neutral-200 p-12 items-center mt-10">
+              <View className="w-20 h-20 bg-neutral-100 rounded-full items-center justify-center mb-4">
+                <Text className="text-3xl">🧺</Text>
+              </View>
+              <Text className="text-neutral-900 font-bold text-lg">
+                Your pantry is empty
+              </Text>
+              <Text className="text-neutral-500 mt-2 text-center leading-6">
+                Add items to start tracking your food storage and expiration
+                dates.
+              </Text>
+            </View>
+          )}
         </ScrollView>
       </RNAnimated.View>
 
@@ -405,13 +438,13 @@ export default function PantryScreen() {
           className="w-16 h-16 bg-primary-500 rounded-full items-center justify-center"
           style={{
             shadowColor: "#047857",
-            shadowOffset: { width: 0, height: 4 },
+            shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 6,
+            shadowRadius: 10,
+            elevation: 8,
           }}
           accessibilityRole="button"
-          accessibilityLabel="Add new item"
+          accessibilityLabel="Add pantry item"
         >
           <Plus size={28} color="white" />
         </TouchableOpacity>
@@ -448,6 +481,7 @@ export default function PantryScreen() {
               />
             </Animated.View>
           )}
+
           {selectedItem && (
             <Animated.View
               key={selectedItem.id}
@@ -457,7 +491,7 @@ export default function PantryScreen() {
               exiting={ZoomOut.duration(220).easing(
                 Easing.bezier(0.4, 0, 0.2, 1),
               )}
-              className="bg-white rounded-3xl w-full max-w-md"
+              className="bg-white rounded-4xl w-full max-w-md border border-neutral-100"
               style={{
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 8 },
@@ -500,7 +534,7 @@ export default function PantryScreen() {
               >
                 <View className="flex-row mb-4">
                   <View className="flex-1 mr-2">
-                    <Text className="text-xs text-neutral-400 mb-2 font-medium">
+                    <Text className="text-xs uppercase tracking-widest text-neutral-400 font-medium mb-2">
                       QUANTITY
                     </Text>
                     <View className="bg-neutral-50 rounded-xl p-3">
@@ -511,7 +545,7 @@ export default function PantryScreen() {
                   </View>
 
                   <View className="flex-1 ml-2">
-                    <Text className="text-xs text-neutral-400 mb-2 font-medium">
+                    <Text className="text-xs uppercase tracking-widest text-neutral-400 font-medium mb-2">
                       LOCATION
                     </Text>
                     <View className="bg-neutral-50 rounded-xl p-3">
@@ -525,48 +559,46 @@ export default function PantryScreen() {
                 {selectedItem.expirationDate &&
                 isValid(selectedItem.expirationDate) ? (
                   <View className="mb-4">
-                    <Text className="text-xs text-neutral-400 mb-2 font-medium">
+                    <Text className="text-xs uppercase tracking-widest text-neutral-400 font-medium mb-2">
                       EXPIRATION
                     </Text>
-                    <View className="bg-neutral-50 rounded-xl p-3">
-                      <View className="flex-row items-center justify-between">
-                        <Text className="text-base font-bold text-neutral-900">
-                          {format(selectedItem.expirationDate, "MMM dd, yyyy")}
-                        </Text>
-                        {(() => {
-                          const st = getExpirationStatus(selectedItem);
-                          if (!st) return null;
-                          return (
-                            <View className="flex-row items-center">
-                              <View
-                                className={`w-1.5 h-1.5 rounded-full mr-2 ${
-                                  st.type === "expired"
-                                    ? "bg-red-500"
-                                    : "bg-amber-400"
-                                }`}
-                              />
-                              <Text
-                                className={`text-xs font-semibold ${
-                                  st.type === "expired"
-                                    ? "text-red-500"
-                                    : "text-amber-500"
-                                }`}
-                              >
-                                {st.type === "expired"
-                                  ? `${st.days}d ago`
-                                  : `${st.days}d left`}
-                              </Text>
-                            </View>
-                          );
-                        })()}
-                      </View>
+                    <View className="bg-neutral-50 rounded-xl p-3 flex-row items-center justify-between">
+                      <Text className="text-base font-bold text-neutral-900">
+                        {format(selectedItem.expirationDate, "MMM dd, yyyy")}
+                      </Text>
+                      {(() => {
+                        const st = getExpirationStatus(selectedItem);
+                        if (!st) return null;
+                        return (
+                          <View className="flex-row items-center">
+                            <View
+                              className={`w-1.5 h-1.5 rounded-full mr-2 ${
+                                st.type === "expired"
+                                  ? "bg-red-500"
+                                  : "bg-amber-400"
+                              }`}
+                            />
+                            <Text
+                              className={`text-xs font-semibold ${
+                                st.type === "expired"
+                                  ? "text-red-500"
+                                  : "text-amber-500"
+                              }`}
+                            >
+                              {st.type === "expired"
+                                ? `${st.days}d ago`
+                                : `${st.days}d left`}
+                            </Text>
+                          </View>
+                        );
+                      })()}
                     </View>
                   </View>
                 ) : null}
 
                 {selectedItem.notes ? (
                   <View className="mb-4">
-                    <Text className="text-xs text-neutral-400 mb-2 font-medium">
+                    <Text className="text-xs uppercase tracking-widest text-neutral-400 font-medium mb-2">
                       NOTES
                     </Text>
                     <View className="bg-neutral-50 rounded-xl p-3">
