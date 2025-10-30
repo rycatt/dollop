@@ -156,8 +156,8 @@ export function AddPantryItemModal({
                 contentContainerStyle={{ paddingBottom: 8 }}
               >
                 <View className="items-center mb-8">
-                  <Text className="text-7xl mb-2">
-                    {formData.emoji || DEFAULT_EMOJI}
+                  <Text className="text-7xl mb-2" style={{ minHeight: 72 }}>
+                    {formData.emoji || ""}
                   </Text>
                 </View>
 
@@ -197,7 +197,7 @@ export function AddPantryItemModal({
                         textAlign: "center",
                         includeFontPadding: false,
                       }}
-                      placeholder="🍎"
+                      placeholder=""
                       placeholderTextColor="#d4d4d4"
                       value={formData.emoji}
                       onChangeText={(text) =>
